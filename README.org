@@ -1,4 +1,4 @@
-#+title: Munjero
+#+title: Eighty
 
 The static website generator for Wei.
 
