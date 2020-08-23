@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+IFS=$'\n\t'
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+[ ! -d "$DIR/../sites/corepaper" ] && pushd $DIR/../sites && git clone https://github.com/corepaper/corepaper && popd
+[ ! -d "$DIR/../sites/classic" ] && pushd $DIR/../sites && git clone https://github.com/munjero/classic && popd
+[ ! -d "$DIR/../sites/wei" ] && pushd $DIR/../sites && git clone https://github.com/munjero/wei && popd
+
+pushd $DIR/../sites/corepaper && git pull && popd
+pushd $DIR/../sites/classic && git pull && popd
+pushd $DIR/../sites/wei && git pull && popd

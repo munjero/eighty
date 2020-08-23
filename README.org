@@ -1,0 +1,24 @@
+#+title: Munjero
+
+The static website generator for Wei.
+
+* Overview
+This is the static website generator Wei uses for many of its
+websites, including That World, Core Paper and others.
+
+* Extensions
+- =jsondoc=: Bundled document, where the =content= attribute is
+  interpreted as plaintext. If the file ends with =html.jsondoc=,
+  cross-reference processor will replace links in the HTML with the
+  approriate values and process special =xref= macros. Otherwise,
+  cross-reference will only handle those special =xref= macros.
+
+* Cross-reference macros
+- =XREFLINK=: Replaced with link-style location to target.
+- =XREFPATH=: Replaced with path-style location to target (resolve to
+  a file name).
+- =XREFFULLLINK=: Similar to =XREFLINK=, but with full URL (including
+  domain name).
+
+* License
+GPL-3.0

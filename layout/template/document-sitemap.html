@@ -1,0 +1,12 @@
+<ul>
+  <li {% if itempath == page.sourcePath %}class="is-current-page"{% endif %}>
+    <a href="{{ item.url }}">{{ item.title }}</a>
+    {% if (not site.sitemap.depth) or (site.sitemap.depth <= depth) %}
+    {% for item in item.children %}
+    {% with depth = depth + 1 %}
+    {% include "document-sitemap.html" %}
+    {% endwith %}
+    {% endfor %}
+    {% endif %}
+  </li>
+</ul>

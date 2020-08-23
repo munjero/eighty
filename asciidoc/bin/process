@@ -1,0 +1,31 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.expand_path('../../lib', __FILE__)
+
+require "bundler/setup"
+require "optparse"
+require "processor"
+
+Options = Struct::new(:source, :target)
+
+class Parser
+  def self.parse!
+    args = Options.new
+
+    opt_parser = OptionParser::new do |opts|
+      opts.banner = "Eighty static website builder (Asciidoc processor)"
+    end
+
+    opt_parser.parse!
+    args
+  end
+end
+
+options = Parser.parse!
+options.source = ARGV[0]
+options.target = ARGV[1]
+
+raise "Source not set" unless options.source
+raise "Target not set" unless options.target
+
+Processor.process(File.expand_path(options.source), File.expand_path(options.target))
