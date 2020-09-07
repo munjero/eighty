@@ -40,9 +40,13 @@ for full_path in glob.glob("{}/**/*".format(SOURCE), recursive=True):
             document["email"] = SITE["email"]
         output_path = os.path.splitext(file_path)[0]
 
-        populate_sitemap_info(document, SITEMAP)
-
-        content = render_document(document, SITE, SITEMAP).encode()
+        if document["layout"] == "document":
+            populate_sitemap_info(document, SITEMAP)
+            content = render_document(document, SITE, SITEMAP).encode()
+        elif document["layout"] == "raw":
+            content = document["content"].encode()
+        else:
+            die("Unknown layout")
     else:
         output_path = file_path
 

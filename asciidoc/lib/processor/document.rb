@@ -45,6 +45,7 @@ module Processor
     item[:author] = doc.attributes["author"]
     item[:email] = doc.attributes["email"]
     item[:order] = doc.attributes["order"]
+    item[:layout] = "document"
     if item[:order]
       item[:order] = Integer(item[:order])
     end

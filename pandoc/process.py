@@ -54,6 +54,18 @@ for full_path in glob.glob("{}/**/*".format(SOURCE), recursive=True):
             "sourcePath": file_path,
             "content": html,
             "toc": toc,
+            "layout": "document",
+        }).encode()
+
+        output_path = os.path.splitext(file_path)[0] + ".html.jsondoc"
+    elif os.path.splitext(file_path)[1] == ".html":
+        html = content.decode("utf-8")
+
+        content = json.dumps({
+            "title": None,
+            "sourcePath": file_path,
+            "content": html,
+            "layout": "raw",
         }).encode()
 
         output_path = os.path.splitext(file_path)[0] + ".html.jsondoc"
