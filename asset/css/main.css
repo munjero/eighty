@@ -75,6 +75,11 @@ table {
     width: 100%;
 }
 
+table > caption {
+    font-size: 1.2rem;
+    padding: 10px;
+}
+
 th {
     border-bottom: 1px solid black;
 }
