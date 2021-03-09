@@ -70,6 +70,18 @@ ol, ul {
 table {
     border-collapse: collapse;
     border-spacing: 0;
+    border-top: 2px solid black;
+    border-bottom: 2px solid black;
+}
+
+th {
+    border-bottom: 1px solid black;
+}
+
+td, th {
+    font-size: 1.4rem;
+    padding: 10px;
+    text-align: left;
 }
 
 ul {
