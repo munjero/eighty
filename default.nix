@@ -8,6 +8,8 @@ let
   specs = import ./specs.nix { inherit pkgs; };
   wei = import ./wei.nix { inherit pkgs; };
   multiverse = import ./multiverse.nix { inherit pkgs; };
+  tifmuhezahi = import ./tifmuhezahi.nix { inherit pkgs; };
+  essay = import ./essay.nix { inherit pkgs; };
 
   all = stdenv.mkDerivation {
     name = "eighty-sites-all";
@@ -18,6 +20,8 @@ let
       ln -s ${classic.out} $out/classic
       ln -s ${wei.out} $out/wei
       ln -s ${multiverse.out} $out/multiverse
+      ln -s ${tifmuhezahi.out} $out/tifmuhezahi
+      ln -s ${essay.out} $out/essay
       ln -s ${specs} $out/specs
     '';
   };

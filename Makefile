@@ -14,3 +14,9 @@ serve-wei: build
 
 serve-multiverse: build
 	ruby -run -ehttpd result/multiverse -p8000
+
+serve-tifmuhezahi: build
+	ruby -rwebrick -e'brick = WEBrick::HTTPServer.new(:Port => 8000); brick.mount("/~tifmuhezahi/", WEBrick::HTTPServlet::FileHandler, "result/tifmuhezahi", true); trap("INT"){ brick.shutdown }; brick.start'
+
+serve-essay: build
+	ruby -rwebrick -e'brick = WEBrick::HTTPServer.new(:Port => 8000); brick.mount("/~essay/", WEBrick::HTTPServlet::FileHandler, "result/essay", true); trap("INT"){ brick.shutdown }; brick.start'
