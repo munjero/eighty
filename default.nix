@@ -7,6 +7,7 @@ let
   classic = import ./classic.nix { inherit pkgs; };
   specs = import ./specs.nix { inherit pkgs; };
   wei = import ./wei.nix { inherit pkgs; };
+  multiverse = import ./multiverse.nix { inherit pkgs; };
 
   all = stdenv.mkDerivation {
     name = "eighty-sites-all";
@@ -16,6 +17,7 @@ let
       ln -s ${corepaper.out} $out/corepaper
       ln -s ${classic.out} $out/classic
       ln -s ${wei.out} $out/wei
+      ln -s ${multiverse.out} $out/multiverse
       ln -s ${specs} $out/specs
     '';
   };

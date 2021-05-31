@@ -1,4 +1,4 @@
-.PHONY: build serve-corepaper serve-classic
+.PHONY: build serve-corepaper serve-classic serve-multiverse serve-wei
 
 build:
 	nix-build .
@@ -11,3 +11,6 @@ serve-classic: build
 
 serve-wei: build
 	ruby -rwebrick -e'brick = WEBrick::HTTPServer.new(:Port => 8000); brick.mount("/~wei/", WEBrick::HTTPServlet::FileHandler, "result/wei", true); trap("INT"){ brick.shutdown }; brick.start'
+
+serve-multiverse: build
+	ruby -run -ehttpd result/multiverse -p8000
