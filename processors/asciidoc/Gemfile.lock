@@ -1,0 +1,20 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    asciidoctor (2.0.10)
+    minitest (5.14.0)
+    rake (10.5.0)
+    rouge (3.15.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  asciidoctor (~> 2.0)
+  bundler (~> 1.17)
+  minitest (~> 5.0)
+  rake (~> 10.0)
+  rouge (~> 3.15)
+
+BUNDLED WITH
+   2.1.4
