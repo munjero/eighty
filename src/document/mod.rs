@@ -1,8 +1,12 @@
 mod asciidoc;
 mod markdown;
 
-use std::{sync::Arc, fmt, path::{Path, PathBuf, Component}};
-use crate::{Error, site::SiteMetadata};
+use crate::{site::SiteMetadata, Error};
+use std::{
+    fmt,
+    path::{Component, Path, PathBuf},
+    sync::Arc,
+};
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentName {
@@ -71,7 +75,7 @@ impl Document {
                     title: output.document.title,
                     rendered: output.document.content,
                 }
-            },
+            }
             DocumentType::Markdown => {
                 let output = self::markdown::process_markdown(&site.path, &rel_file_path)?;
 
@@ -79,7 +83,7 @@ impl Document {
                     title: output.title,
                     rendered: output.content,
                 }
-            },
+            }
         };
 
         Ok(Document {
@@ -116,15 +120,17 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error:
 
     while let Some(component) = components.next() {
         if let Component::Normal(component_name) = component {
-            let component_name = component_name.to_str().ok_or(Error::PathContainNonUnicode)?;
+            let component_name = component_name
+                .to_str()
+                .ok_or(Error::PathContainNonUnicode)?;
 
             if component_name == "_posts" {
                 is_post = true;
-                break
+                break;
             }
 
             if components.peek().is_none() {
-                break
+                break;
             } else {
                 labels.push(component_name.to_owned());
             }
@@ -133,8 +139,11 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error:
         }
     }
 
-    let file_stem = rel_file_path.file_stem().ok_or(Error::InvalidPathComponent)?
-        .to_str().ok_or(Error::PathContainNonUnicode)?;
+    let file_stem = rel_file_path
+        .file_stem()
+        .ok_or(Error::InvalidPathComponent)?
+        .to_str()
+        .ok_or(Error::PathContainNonUnicode)?;
     let post = if is_post {
         let file_parts = file_stem.split('-').collect::<Vec<_>>();
         let date_part = file_parts[0..3].join("-");
@@ -150,8 +159,5 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error:
         None
     };
 
-    Ok(DocumentName {
-        labels,
-        post
-    })
+    Ok(DocumentName { labels, post })
 }

@@ -1,7 +1,14 @@
-use std::{fs::{self, File}, path::{Path, PathBuf}, fmt, collections::HashMap, io::BufReader, sync::Arc};
-use serde::{Serialize, Deserialize};
-use crate::Error;
 use crate::file::FileStore;
+use crate::Error;
+use serde::{Deserialize, Serialize};
+use std::{
+    collections::HashMap,
+    fmt,
+    fs::{self, File},
+    io::BufReader,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct SiteName(String);
@@ -62,10 +69,7 @@ impl Site {
 
         let files = FileStore::new(metadata.clone())?;
 
-        let site = Site {
-            metadata,
-            files,
-        };
+        let site = Site { metadata, files };
 
         Ok(site)
     }
@@ -86,10 +90,13 @@ impl SiteStore {
 
         for site_folder in root_subfolders {
             let site_folder = site_folder?;
-            let site_name = site_folder.file_name().into_string().map_err(|_| Error::PathContainNonUnicode)?;
+            let site_name = site_folder
+                .file_name()
+                .into_string()
+                .map_err(|_| Error::PathContainNonUnicode)?;
 
             if site_name.starts_with(".") || site_name.starts_with("_") {
-                continue
+                continue;
             }
 
             let site = Site::new(SiteName(site_name.clone()), &site_folder.path())?;

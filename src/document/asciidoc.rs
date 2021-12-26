@@ -1,6 +1,6 @@
-use std::{path::Path, process::Command};
-use serde::{Serialize, Deserialize};
 use crate::Error;
+use serde::{Deserialize, Serialize};
+use std::{path::Path, process::Command};
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -33,14 +33,17 @@ pub struct AsciiDocOutputSpec {
     pub url: String,
 }
 
-pub fn process_asciidoc(site_path: &Path, rel_path: &Path) -> Result<AsciiDocOutput, Box<dyn std::error::Error>> {
+pub fn process_asciidoc(
+    site_path: &Path,
+    rel_path: &Path,
+) -> Result<AsciiDocOutput, Box<dyn std::error::Error>> {
     let output = Command::new("eighty-asciidoc")
         .arg(rel_path)
         .current_dir(site_path)
         .output()?;
 
     if !output.status.success() {
-        return Err(Box::new(Error::RunCommandFailed))
+        return Err(Box::new(Error::RunCommandFailed));
     }
 
     Ok(serde_json::from_slice(&output.stdout)?)

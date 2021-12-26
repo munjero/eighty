@@ -1,6 +1,10 @@
-use std::{path::PathBuf, collections::HashMap, sync::Arc};
+use crate::{
+    document::{Document, DocumentName, DocumentType},
+    site::SiteMetadata,
+    Error,
+};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 use walkdir::WalkDir;
-use crate::{Error, site::SiteMetadata, document::{DocumentName, Document, DocumentType}};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct File {

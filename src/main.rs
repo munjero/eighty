@@ -1,10 +1,10 @@
-mod site;
 mod document;
 mod file;
+mod site;
 
-use clap::{Arg, App, SubCommand};
-use std::{fmt, path::Path};
 use crate::site::SiteStore;
+use clap::{App, Arg, SubCommand};
+use std::{fmt, path::Path};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub enum Error {
@@ -19,13 +19,12 @@ impl fmt::Display for Error {
     }
 }
 
-impl std::error::Error for Error { }
+impl std::error::Error for Error {}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let matches = App::new("Eighty")
         .subcommand(
-            SubCommand::with_name("build")
-                .arg(Arg::with_name("root").index(1).required(true))
+            SubCommand::with_name("build").arg(Arg::with_name("root").index(1).required(true)),
         )
         .get_matches();
 
