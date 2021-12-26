@@ -9,6 +9,7 @@ use std::{
     path::{Path, PathBuf},
     sync::Arc,
 };
+use tera::Tera;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct SiteName(String);
@@ -90,6 +91,15 @@ impl SiteStore {
         let mut sites = HashMap::new();
 
         let root_subfolders = fs::read_dir(root_path)?;
+
+        let tera = Arc::new(
+            Tera::new(
+                root_path.join("_assets/layouts/**/*.html")
+                    .to_str().ok_or(Error::PathContainNonUnicode)?
+            )?
+        );
+
+        println!("{:?}", tera);
 
         for site_folder in root_subfolders {
             let site_folder = site_folder?;

@@ -7,6 +7,7 @@ use std::{
     path::{Component, Path, PathBuf},
     sync::Arc,
 };
+use tera::Tera;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentName {
@@ -53,7 +54,7 @@ impl Document {
         file_path: &Path,
         typ: DocumentType,
     ) -> Result<Document, Box<dyn std::error::Error>> {
-        let metadata = Arc::new(DocumentMetadata::new(site, file_path, typ)?);
+        let metadata = Arc::new(DocumentMetadata::new(site.clone(), file_path, typ)?);
         let rendered = Arc::new(RenderedDocument::new(metadata.clone())?);
 
         Ok(Document {
