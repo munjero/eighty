@@ -1,7 +1,7 @@
 mod asciidoc;
 mod markdown;
 
-use crate::{site::SiteMetadata, Error};
+use crate::{site::Site, Error};
 use std::{
     fmt,
     path::{Component, Path, PathBuf},
@@ -43,55 +43,26 @@ pub enum DocumentType {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct Document {
-    pub site: Arc<SiteMetadata>,
+    pub site: Arc<Site>,
     pub name: DocumentName,
     pub typ: DocumentType,
     pub source_path: PathBuf,
-    pub content: DocumentContent,
-}
-
-#[derive(Eq, Clone, PartialEq, Debug)]
-pub struct DocumentContent {
-    pub title: String,
-    pub rendered: String,
 }
 
 impl Document {
     pub fn new(
-        site: Arc<SiteMetadata>,
+        site: Arc<Site>,
         file_path: &Path,
         typ: DocumentType,
     ) -> Result<Document, Box<dyn std::error::Error>> {
         let rel_file_path = file_path.strip_prefix(&site.path)?;
         let name = derive_name(&rel_file_path)?;
 
-        println!("[{}] Processing document {} ...", site.name, name);
-
-        let content = match typ {
-            DocumentType::AsciiDoc => {
-                let output = self::asciidoc::process_asciidoc(&site.path, &rel_file_path)?;
-
-                DocumentContent {
-                    title: output.document.title,
-                    rendered: output.document.content,
-                }
-            }
-            DocumentType::Markdown => {
-                let output = self::markdown::process_markdown(&site.path, &rel_file_path)?;
-
-                DocumentContent {
-                    title: output.title,
-                    rendered: output.content,
-                }
-            }
-        };
-
         Ok(Document {
             site,
             name,
             source_path: file_path.to_owned(),
             typ,
-            content,
         })
     }
 
@@ -160,4 +131,40 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error:
     };
 
     Ok(DocumentName { labels, post })
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct RenderedDocument {
+    pub document: Arc<Document>,
+    pub title: String,
+    pub rendered: String,
+}
+
+impl RenderedDocument {
+    pub fn new(
+        document: Arc<Document>,
+    ) -> Result<RenderedDocument, Box<dyn std::error::Error>> {
+        let rel_file_path = document.source_path.strip_prefix(&document.site.path)?;
+
+        Ok(match document.typ {
+            DocumentType::AsciiDoc => {
+                let output = self::asciidoc::process_asciidoc(&document.site.path, &rel_file_path)?;
+
+                RenderedDocument {
+                    document,
+                    title: output.document.title,
+                    rendered: output.document.content,
+                }
+            }
+            DocumentType::Markdown => {
+                let output = self::markdown::process_markdown(&document.site.path, &rel_file_path)?;
+
+                RenderedDocument {
+                    document,
+                    title: output.title,
+                    rendered: output.content,
+                }
+            }
+        })
+    }
 }

@@ -44,16 +44,10 @@ pub struct SiteConfigSitemap {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct SiteMetadata {
+pub struct Site {
     pub name: SiteName,
     pub path: PathBuf,
     pub config: SiteConfig,
-}
-
-#[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Site {
-    pub metadata: Arc<SiteMetadata>,
-    pub files: FileStore,
 }
 
 impl Site {
@@ -61,26 +55,18 @@ impl Site {
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 
-        let metadata = Arc::new(SiteMetadata {
+        let site = Site {
             name: name.clone(),
             path: path.to_owned(),
             config: site_config,
-        });
-
-        let files = FileStore::new(metadata.clone())?;
-
-        let site = Site { metadata, files };
+        };
 
         Ok(site)
-    }
-
-    pub fn metadata(&self) -> &Arc<SiteMetadata> {
-        &self.metadata
     }
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct SiteStore(HashMap<SiteName, Site>);
+pub struct SiteStore(HashMap<SiteName, Arc<Site>>);
 
 impl SiteStore {
     pub fn new(root_path: &Path) -> Result<SiteStore, Box<dyn std::error::Error>> {
@@ -101,9 +87,13 @@ impl SiteStore {
 
             let site = Site::new(SiteName(site_name.clone()), &site_folder.path())?;
 
-            sites.insert(SiteName(site_name), site);
+            sites.insert(SiteName(site_name), Arc::new(site));
         }
 
         Ok(SiteStore(sites))
+    }
+
+    pub fn sites(&self) -> impl Iterator<Item=&Arc<Site>> {
+        self.0.values()
     }
 }

@@ -3,8 +3,10 @@ mod file;
 mod site;
 
 use crate::site::SiteStore;
+use crate::file::FileStore;
+use crate::document::RenderedDocument;
 use clap::{App, Arg, SubCommand};
-use std::{fmt, path::Path};
+use std::{fmt, path::Path, collections::HashMap, sync::Arc};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub enum Error {
@@ -30,7 +32,30 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     if let Some(matches) = matches.subcommand_matches("build") {
         let root_path = Path::new(matches.value_of("root").expect("root is required"));
-        let store = SiteStore::new(root_path);
+
+        let site_store = SiteStore::new(root_path)?;
+        let mut file_stores = HashMap::new();
+
+        for site in site_store.sites() {
+            let file_store = FileStore::new(site.clone())?;
+            file_stores.insert(site.name.clone(), file_store);
+        }
+
+        let mut rendered_stores = HashMap::new();
+
+        for (site_name, file_store) in &file_stores {
+            let mut rendered_store = HashMap::new();
+
+            for (document_name, document) in &file_store.documents {
+                println!("[{}] Rendering document {} ...", document.site.name, document.name);
+
+                let rendered = RenderedDocument::new(document.clone());
+
+                rendered_store.insert(document_name, Arc::new(rendered));
+            }
+
+            rendered_stores.insert(site_name, rendered_store);
+        }
 
         // println!("{:?}", store);
     }
