@@ -50,14 +50,6 @@ if os.path.splitext(file_path)[1] == ".md":
         "toc": toc,
         "layout": "document",
     }, sort_keys=True, indent=4)
-elif os.path.splitext(file_path)[1] == ".html":
-    html = content.decode("utf-8")
-
-    content = json.dumps({
-        "title": None,
-        "content": html,
-        "layout": "raw",
-    }, sort_keys=True, indent=4)
 else:
     raise "Unknown file extension"
 

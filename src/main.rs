@@ -8,7 +8,8 @@ use crate::site::SiteStore;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub enum Error {
-    PathContainNonUnicode
+    PathContainNonUnicode,
+    InvalidPathComponent,
 }
 
 impl fmt::Display for Error {
