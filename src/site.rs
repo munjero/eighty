@@ -38,12 +38,21 @@ pub struct Site {
     pub files: FileStore,
 }
 
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct SiteDescriptor {
+    pub name: SiteName,
+    pub path: PathBuf,
+}
+
 impl Site {
     pub fn new(name: SiteName, path: &Path) -> Result<Site, Box<dyn std::error::Error>> {
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 
-        let files = FileStore::new(name.clone(), path)?;
+        let files = FileStore::new(SiteDescriptor {
+            name: name.clone(),
+            path: path.to_owned(),
+        })?;
 
         let site = Site {
             name,
@@ -53,6 +62,13 @@ impl Site {
         };
 
         Ok(site)
+    }
+
+    pub fn descriptor(&self) -> SiteDescriptor {
+        SiteDescriptor {
+            name: self.name.clone(),
+            path: self.path.clone(),
+        }
     }
 }
 
@@ -69,9 +85,7 @@ impl SiteStore {
             let site_folder = site_folder?;
             let site_name = site_folder.file_name().into_string().map_err(|_| Error::PathContainNonUnicode)?;
 
-            if site_name.starts_with(".") ||
-                site_name.starts_with("_")
-            {
+            if site_name.starts_with(".") || site_name.starts_with("_") {
                 continue
             }
 

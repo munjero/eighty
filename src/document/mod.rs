@@ -1,5 +1,5 @@
 use std::path::{Path, PathBuf, Component};
-use crate::{Error, site::SiteName};
+use crate::{Error, site::SiteDescriptor};
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentName {
@@ -21,7 +21,7 @@ pub enum DocumentType {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct Document {
-    pub site: SiteName,
+    pub site: SiteDescriptor,
     pub name: DocumentName,
     pub typ: DocumentType,
     pub source_path: PathBuf,
@@ -29,12 +29,11 @@ pub struct Document {
 
 impl Document {
     pub fn new(
-        site: SiteName,
-        site_path: &Path,
+        site: SiteDescriptor,
         file_path: &Path,
         typ: DocumentType,
     ) -> Result<Document, Box<dyn std::error::Error>> {
-        let rel_file_path = file_path.strip_prefix(site_path)?;
+        let rel_file_path = file_path.strip_prefix(&site.path)?;
         let name = derive_name(&rel_file_path)?;
 
         Ok(Document {

@@ -1,10 +1,10 @@
-use std::{path::{Path, PathBuf}, collections::HashMap};
+use std::{path::PathBuf, collections::HashMap};
 use walkdir::WalkDir;
-use crate::{Error, site::SiteName, document::{DocumentName, Document, DocumentType}};
+use crate::{Error, site::SiteDescriptor, document::{DocumentName, Document, DocumentType}};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct File {
-    pub site: SiteName,
+    pub site: SiteDescriptor,
     pub path: PathBuf,
     pub source_path: PathBuf,
 }
@@ -16,11 +16,11 @@ pub struct FileStore {
 }
 
 impl FileStore {
-    pub fn new(site_name: SiteName, path: &Path) -> Result<FileStore, Box<dyn std::error::Error>> {
+    pub fn new(site: SiteDescriptor) -> Result<FileStore, Box<dyn std::error::Error>> {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
-        let walker = WalkDir::new(path).into_iter().filter_entry(|entry| {
+        let walker = WalkDir::new(&site.path).into_iter().filter_entry(|entry| {
             if let Some(file_name) = entry.file_name().to_str() {
                 if file_name == "_posts" && entry.file_type().is_dir() {
                     return true;
@@ -53,13 +53,13 @@ impl FileStore {
                 };
 
                 if let Some(typ) = typ {
-                    let document = Document::new(site_name.clone(), path, entry.path(), typ)?;
+                    let document = Document::new(site.clone(), entry.path(), typ)?;
                     documents.insert(document.name.clone(), document);
                 } else {
-                    let rel_file_path = entry.path().strip_prefix(path)?;
+                    let rel_file_path = entry.path().strip_prefix(&site.path)?;
 
                     let file = File {
-                        site: site_name.clone(),
+                        site: site.clone(),
                         path: rel_file_path.to_owned(),
                         source_path: entry.path().to_owned(),
                     };
