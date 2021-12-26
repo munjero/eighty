@@ -38,21 +38,16 @@ module Processor
     doc = Asciidoctor.load_file path, options
 
     item[:title] = doc.attributes["doctitle"]
-    item[:sourcePath] = path
     item[:license] = doc.attributes["license"]
     item[:licenseCode] = doc.attributes["license-code"]
     item[:author] = doc.attributes["author"]
     item[:email] = doc.attributes["email"]
     item[:order] = doc.attributes["order"]
-    item[:layout] = "document"
     if item[:order]
       item[:order] = Integer(item[:order])
     end
     item[:toc] = doc.converter.convert(doc, "outline", toclevels: 3)
-    item[:revision] = {}
-    if doc.attributes["created"]
-      item[:revision][:created] = doc.attributes["created"]
-    end
+    item[:created] = doc.attributes["created"]
 
     description_block = Processor.search_description(doc.blocks)
     item[:description] = description_block.content.tr("\n", " ")

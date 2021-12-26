@@ -1,3 +1,5 @@
+mod asciidoc;
+
 use std::{sync::Arc, path::{Path, PathBuf, Component}};
 use crate::{Error, site::SiteMetadata};
 
@@ -25,6 +27,17 @@ pub struct Document {
     pub name: DocumentName,
     pub typ: DocumentType,
     pub source_path: PathBuf,
+    pub content: DocumentContent,
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub enum DocumentContent {
+    AsciiDoc {
+        title: String,
+        description: Option<String>,
+        rendered: String,
+    },
+    Markdown,
 }
 
 impl Document {
@@ -36,11 +49,27 @@ impl Document {
         let rel_file_path = file_path.strip_prefix(&site.path)?;
         let name = derive_name(&rel_file_path)?;
 
+        let content = match typ {
+            DocumentType::AsciiDoc => {
+                let output = self::asciidoc::process_asciidoc(&site.path, &rel_file_path)?;
+
+                DocumentContent::AsciiDoc {
+                    title: output.document.title,
+                    description: Some(output.document.description),
+                    rendered: output.document.content,
+                }
+            },
+            DocumentType::Markdown => {
+                DocumentContent::Markdown
+            },
+        };
+
         Ok(Document {
             site,
             name,
             source_path: file_path.to_owned(),
             typ,
+            content,
         })
     }
 

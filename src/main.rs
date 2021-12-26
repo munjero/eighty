@@ -10,6 +10,7 @@ use crate::site::SiteStore;
 pub enum Error {
     PathContainNonUnicode,
     InvalidPathComponent,
+    RunCommandFailed,
 }
 
 impl fmt::Display for Error {
