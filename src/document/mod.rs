@@ -1,5 +1,5 @@
-use std::path::{Path, PathBuf, Component};
-use crate::{Error, site::SiteDescriptor};
+use std::{sync::Arc, path::{Path, PathBuf, Component}};
+use crate::{Error, site::SiteMetadata};
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentName {
@@ -21,7 +21,7 @@ pub enum DocumentType {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct Document {
-    pub site: SiteDescriptor,
+    pub site: Arc<SiteMetadata>,
     pub name: DocumentName,
     pub typ: DocumentType,
     pub source_path: PathBuf,
@@ -29,7 +29,7 @@ pub struct Document {
 
 impl Document {
     pub fn new(
-        site: SiteDescriptor,
+        site: Arc<SiteMetadata>,
         file_path: &Path,
         typ: DocumentType,
     ) -> Result<Document, Box<dyn std::error::Error>> {

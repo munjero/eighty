@@ -1,4 +1,4 @@
-use std::{fs::{self, File}, path::{Path, PathBuf}, collections::HashMap, io::BufReader};
+use std::{fs::{self, File}, path::{Path, PathBuf}, collections::HashMap, io::BufReader, sync::Arc};
 use serde::{Serialize, Deserialize};
 use crate::Error;
 use crate::file::FileStore;
@@ -31,17 +31,16 @@ pub struct SiteConfigSitemap {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Site {
+pub struct SiteMetadata {
     pub name: SiteName,
     pub path: PathBuf,
     pub config: SiteConfig,
-    pub files: FileStore,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct SiteDescriptor {
-    pub name: SiteName,
-    pub path: PathBuf,
+pub struct Site {
+    pub metadata: Arc<SiteMetadata>,
+    pub files: FileStore,
 }
 
 impl Site {
@@ -49,26 +48,24 @@ impl Site {
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 
-        let files = FileStore::new(SiteDescriptor {
+        let metadata = Arc::new(SiteMetadata {
             name: name.clone(),
             path: path.to_owned(),
-        })?;
+            config: site_config,
+        });
+
+        let files = FileStore::new(metadata.clone())?;
 
         let site = Site {
-            name,
-            path: path.to_owned(),
-            config: site_config,
+            metadata,
             files,
         };
 
         Ok(site)
     }
 
-    pub fn descriptor(&self) -> SiteDescriptor {
-        SiteDescriptor {
-            name: self.name.clone(),
-            path: self.path.clone(),
-        }
+    pub fn metadata(&self) -> &Arc<SiteMetadata> {
+        &self.metadata
     }
 }
 

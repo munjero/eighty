@@ -1,10 +1,10 @@
-use std::{path::PathBuf, collections::HashMap};
+use std::{path::PathBuf, collections::HashMap, sync::Arc};
 use walkdir::WalkDir;
-use crate::{Error, site::SiteDescriptor, document::{DocumentName, Document, DocumentType}};
+use crate::{Error, site::SiteMetadata, document::{DocumentName, Document, DocumentType}};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct File {
-    pub site: SiteDescriptor,
+    pub site: Arc<SiteMetadata>,
     pub path: PathBuf,
     pub source_path: PathBuf,
 }
@@ -16,7 +16,7 @@ pub struct FileStore {
 }
 
 impl FileStore {
-    pub fn new(site: SiteDescriptor) -> Result<FileStore, Box<dyn std::error::Error>> {
+    pub fn new(site: Arc<SiteMetadata>) -> Result<FileStore, Box<dyn std::error::Error>> {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
