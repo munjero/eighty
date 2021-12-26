@@ -1,6 +1,6 @@
 use crate::{
     document::{Document, DocumentName, DocumentType},
-    site::Site,
+    site::SiteMetadata,
     Error,
 };
 use std::{collections::HashMap, path::PathBuf, sync::Arc, fs};
@@ -8,7 +8,7 @@ use walkdir::WalkDir;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct File {
-    pub site: Arc<Site>,
+    pub site: Arc<SiteMetadata>,
     pub path: PathBuf,
     pub source_path: PathBuf,
     pub content: Vec<u8>,
@@ -21,7 +21,7 @@ pub struct FileStore {
 }
 
 impl FileStore {
-    pub fn new(site: Arc<Site>) -> Result<FileStore, Box<dyn std::error::Error>> {
+    pub fn new(site: Arc<SiteMetadata>) -> Result<FileStore, Box<dyn std::error::Error>> {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
@@ -59,7 +59,7 @@ impl FileStore {
 
                 if let Some(typ) = typ {
                     let document = Document::new(site.clone(), entry.path(), typ)?;
-                    documents.insert(document.name.clone(), Arc::new(document));
+                    documents.insert(document.metadata.name.clone(), Arc::new(document));
                 } else {
                     let rel_file_path = entry.path().strip_prefix(&site.path)?;
                     let content = fs::read(entry.path())?;

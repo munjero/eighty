@@ -34,30 +34,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let root_path = Path::new(matches.value_of("root").expect("root is required"));
 
         let site_store = SiteStore::new(root_path)?;
-        let mut file_stores = HashMap::new();
-
-        for site in site_store.sites() {
-            let file_store = FileStore::new(site.clone())?;
-            file_stores.insert(site.name.clone(), file_store);
-        }
-
-        let mut rendered_stores = HashMap::new();
-
-        for (site_name, file_store) in &file_stores {
-            let mut rendered_store = HashMap::new();
-
-            for (document_name, document) in &file_store.documents {
-                println!("[{}] Rendering document {} ...", document.site.name, document.name);
-
-                let rendered = RenderedDocument::new(document.clone());
-
-                rendered_store.insert(document_name, Arc::new(rendered));
-            }
-
-            rendered_stores.insert(site_name, rendered_store);
-        }
-
-        // println!("{:?}", store);
     }
 
     Ok(())

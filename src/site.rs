@@ -44,24 +44,41 @@ pub struct SiteConfigSitemap {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Site {
+pub struct SiteMetadata {
     pub name: SiteName,
     pub path: PathBuf,
     pub config: SiteConfig,
 }
 
-impl Site {
-    pub fn new(name: SiteName, path: &Path) -> Result<Site, Box<dyn std::error::Error>> {
+impl SiteMetadata {
+    pub fn new(name: SiteName, path: &Path) -> Result<SiteMetadata, Box<dyn std::error::Error>> {
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 
-        let site = Site {
+        let site = SiteMetadata {
             name: name.clone(),
             path: path.to_owned(),
             config: site_config,
         };
 
         Ok(site)
+    }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct Site {
+    pub metadata: Arc<SiteMetadata>,
+    pub files: Arc<FileStore>,
+}
+
+impl Site {
+    pub fn new(name: SiteName, path: &Path) -> Result<Site, Box<dyn std::error::Error>> {
+        println!("[{}] Generating the data for site ...", name);
+
+        let metadata = Arc::new(SiteMetadata::new(name, path)?);
+        let files = Arc::new(FileStore::new(metadata.clone())?);
+
+        Ok(Site { metadata, files })
     }
 }
 
