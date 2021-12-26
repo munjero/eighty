@@ -48,7 +48,6 @@ if os.path.splitext(file_path)[1] == ".md":
         "order": order,
         "content": html,
         "toc": toc,
-        "layout": "document",
     }, sort_keys=True, indent=4)
 else:
     raise "Unknown file extension"

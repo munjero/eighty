@@ -33,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let root_path = Path::new(matches.value_of("root").expect("root is required"));
         let store = SiteStore::new(root_path);
 
-        println!("{:?}", store);
+        // println!("{:?}", store);
     }
 
     Ok(())

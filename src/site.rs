@@ -1,10 +1,16 @@
-use std::{fs::{self, File}, path::{Path, PathBuf}, collections::HashMap, io::BufReader, sync::Arc};
+use std::{fs::{self, File}, path::{Path, PathBuf}, fmt, collections::HashMap, io::BufReader, sync::Arc};
 use serde::{Serialize, Deserialize};
 use crate::Error;
 use crate::file::FileStore;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct SiteName(String);
+
+impl fmt::Display for SiteName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

@@ -1,12 +1,28 @@
 mod asciidoc;
+mod markdown;
 
-use std::{sync::Arc, path::{Path, PathBuf, Component}};
+use std::{sync::Arc, fmt, path::{Path, PathBuf, Component}};
 use crate::{Error, site::SiteMetadata};
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentName {
     pub labels: Vec<String>,
     pub post: Option<DocumentPostLabel>,
+}
+
+impl fmt::Display for DocumentName {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        if self.labels.is_empty() && self.post.is_none() {
+            write!(f, "[index]")?;
+            return Ok(());
+        }
+
+        write!(f, "{}", self.labels.join("/"))?;
+        if let Some(post) = self.post.as_ref() {
+            write!(f, "[post:{},{}]", post.date, post.label)?;
+        }
+        Ok(())
+    }
 }
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
@@ -31,13 +47,9 @@ pub struct Document {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub enum DocumentContent {
-    AsciiDoc {
-        title: String,
-        description: Option<String>,
-        rendered: String,
-    },
-    Markdown,
+pub struct DocumentContent {
+    pub title: String,
+    pub rendered: String,
 }
 
 impl Document {
@@ -49,18 +61,24 @@ impl Document {
         let rel_file_path = file_path.strip_prefix(&site.path)?;
         let name = derive_name(&rel_file_path)?;
 
+        println!("[{}] Processing document {} ...", site.name, name);
+
         let content = match typ {
             DocumentType::AsciiDoc => {
                 let output = self::asciidoc::process_asciidoc(&site.path, &rel_file_path)?;
 
-                DocumentContent::AsciiDoc {
+                DocumentContent {
                     title: output.document.title,
-                    description: Some(output.document.description),
                     rendered: output.document.content,
                 }
             },
             DocumentType::Markdown => {
-                DocumentContent::Markdown
+                let output = self::markdown::process_markdown(&site.path, &rel_file_path)?;
+
+                DocumentContent {
+                    title: output.title,
+                    rendered: output.content,
+                }
             },
         };
 
@@ -120,7 +138,7 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error:
     let post = if is_post {
         let file_parts = file_stem.split('-').collect::<Vec<_>>();
         let date_part = file_parts[0..3].join("-");
-        let label_part = file_parts[..3].join("-");
+        let label_part = file_parts[3..].join("-");
         Some(DocumentPostLabel {
             date: date_part,
             label: label_part,
