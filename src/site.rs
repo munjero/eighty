@@ -1,7 +1,7 @@
 use std::{fs::{self, File}, path::{Path, PathBuf}, collections::HashMap, io::BufReader};
 use serde::{Serialize, Deserialize};
-use walkdir::WalkDir;
 use crate::Error;
+use crate::file::FileStore;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct SiteName(String);
@@ -35,6 +35,7 @@ pub struct Site {
     pub name: SiteName,
     pub path: PathBuf,
     pub config: SiteConfig,
+    pub files: FileStore,
 }
 
 impl Site {
@@ -42,15 +43,14 @@ impl Site {
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 
+        let files = FileStore::new(name.clone(), path)?;
+
         let site = Site {
             name,
             path: path.to_owned(),
             config: site_config,
+            files,
         };
-
-        for entry in WalkDir::new(path) {
-            println!("{:?}", entry?.path().display());
-        }
 
         Ok(site)
     }

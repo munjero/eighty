@@ -1,5 +1,6 @@
 mod site;
 mod document;
+mod file;
 
 use clap::{Arg, App, SubCommand};
 use std::{fmt, path::Path};
