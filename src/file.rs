@@ -6,7 +6,7 @@ use crate::{Error, site::SiteName, document::{DocumentName, Document, DocumentTy
 pub struct File {
     pub site: SiteName,
     pub path: PathBuf,
-
+    pub source_path: PathBuf,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
@@ -61,6 +61,7 @@ impl FileStore {
                     let file = File {
                         site: site_name.clone(),
                         path: rel_file_path.to_owned(),
+                        source_path: entry.path().to_owned(),
                     };
 
                     files.insert(file.path.clone(), file);

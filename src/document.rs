@@ -23,8 +23,8 @@ pub enum DocumentType {
 pub struct Document {
     pub site: SiteName,
     pub name: DocumentName,
-    pub path: PathBuf,
     pub typ: DocumentType,
+    pub source_path: PathBuf,
 }
 
 impl Document {
@@ -84,7 +84,7 @@ impl Document {
         Ok(Document {
             site,
             name: document_name,
-            path: rel_file_path.to_owned(),
+            source_path: file_path.to_owned(),
             typ,
         })
     }
