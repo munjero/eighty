@@ -11,6 +11,9 @@ pub enum Error {
     WalkDir(walkdir::Error),
 
     TokioJoin(tokio::task::JoinError),
+    SiteNotExist,
+    DocumentNotFound,
+    HyperHttp(hyper::http::Error),
 }
 
 impl fmt::Display for Error {
@@ -48,5 +51,11 @@ impl From<walkdir::Error> for Error {
 impl From<tokio::task::JoinError> for Error {
     fn from(err: tokio::task::JoinError) -> Error {
         Error::TokioJoin(err)
+    }
+}
+
+impl From<hyper::http::Error> for Error {
+    fn from(err: hyper::http::Error) -> Error {
+        Error::HyperHttp(err)
     }
 }

@@ -31,6 +31,35 @@ impl fmt::Display for DocumentName {
     }
 }
 
+impl DocumentName {
+    pub fn path(&self) -> PathBuf {
+        let mut path = self.folder_path();
+
+        path.push("index.html");
+
+        path
+    }
+
+    pub fn folder_path(&self) -> PathBuf {
+        let mut path = PathBuf::new();
+
+        for label in &self.labels {
+            path.push(label);
+        }
+
+        if let Some(post) = self.post.as_ref() {
+            path.push(post.date.split('-').collect::<Vec<_>>().join("/"));
+            path.push(&post.label);
+        }
+
+        path
+    }
+
+    pub fn is_matched(&self, other: &Path) -> bool {
+        other == self.path() || other == self.folder_path()
+    }
+}
+
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentPostLabel {
     pub date: String,
@@ -69,23 +98,6 @@ impl DocumentMetadata {
             modified,
             typ,
         })
-    }
-
-    pub fn path(&self) -> PathBuf {
-        let mut path = PathBuf::new();
-
-        for label in &self.name.labels {
-            path.push(label);
-        }
-
-        if let Some(post) = self.name.post.as_ref() {
-            path.push(post.date.split('-').collect::<Vec<_>>().join("/"));
-            path.push(&post.label);
-        }
-
-        path.push("index.html");
-
-        path
     }
 }
 
