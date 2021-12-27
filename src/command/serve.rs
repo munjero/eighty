@@ -69,8 +69,8 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
         let site_metadata_store = Arc::new(SiteMetadataStore::new(&root_path)?);
         let rendered_store = Arc::new(RenderedStore::new(site_metadata_store.clone())?);
         let asset_store = Arc::new(AssetStore::new(&root_path)?);
-        let layouted_store = Arc::new(LayoutedStore::new(rendered_store.clone(), asset_store.clone())?);
         let sitemap_store = Arc::new(SitemapStore::new(rendered_store.clone())?);
+        let layouted_store = Arc::new(LayoutedStore::new(rendered_store.clone(), sitemap_store.clone(), asset_store.clone())?);
 
         let context = Context {
             metadata: site_metadata_store,

@@ -3,6 +3,7 @@ use std::sync::Arc;
 use super::{DocumentMetadata, RenderedDocument};
 use handlebars::Handlebars;
 use crate::Error;
+use crate::sitemap::{Sitemap, SitemapItem};
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -28,6 +29,8 @@ pub struct DocumentContext {
 
     pub page_license: Option<String>,
     pub page_license_code: Option<String>,
+
+    pub sitemap: Vec<DocumentContextSitemapItem>,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -37,6 +40,24 @@ pub struct DocumentContextSiteLink {
     pub name: String,
 }
 
+#[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct DocumentContextSitemapItem {
+    pub title: String,
+    pub path: String,
+    pub children: Vec<DocumentContextSitemapItem>,
+}
+
+impl From<SitemapItem> for DocumentContextSitemapItem {
+    fn from(item: SitemapItem) -> Self {
+        Self {
+            title: item.title,
+            path: format!("{}", item.document_name.folder_path().display()),
+            children: item.children.iter().map(|child| child.clone().into()).collect(),
+        }
+    }
+}
+
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct LayoutedDocument {
     pub metadata: Arc<DocumentMetadata>,
@@ -44,7 +65,7 @@ pub struct LayoutedDocument {
 }
 
 impl LayoutedDocument {
-    pub fn new(rendered: Arc<RenderedDocument>, handlebars: &Handlebars) -> Result<LayoutedDocument, Error> {
+    pub fn new(rendered: Arc<RenderedDocument>, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<LayoutedDocument, Error> {
         let site_config = &rendered.metadata.site.config;
 
         let context = DocumentContext {
@@ -69,9 +90,11 @@ impl LayoutedDocument {
 
             page_license: None,
             page_license_code: None,
+
+            sitemap: sitemap.items.iter().map(|child| child.clone().into()).collect(),
         };
 
-        let layouted = handlebars.render("document", &context)?;
+        let layouted = handlebars.render("document/main", &context)?;
 
         Ok(LayoutedDocument {
             metadata: rendered.metadata.clone(),

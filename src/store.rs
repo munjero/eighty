@@ -220,14 +220,16 @@ pub struct LayoutedStore {
 }
 
 impl LayoutedStore {
-    pub fn new(rendered: Arc<RenderedStore>, assets: Arc<AssetStore>) -> Result<LayoutedStore, Error> {
+    pub fn new(rendered: Arc<RenderedStore>, sitemaps: Arc<SitemapStore>, assets: Arc<AssetStore>) -> Result<LayoutedStore, Error> {
         let documents = rendered
             .documents
             .iter()
             .map(|(name, site)| {
+                let sitemap = sitemaps.sitemaps.get(&name).ok_or(Error::SiteNotExist)?;
+
                 Ok((
                     name.clone(),
-                    Arc::new(LayoutedStoreItem::new(site.clone(), &assets.handlebars)?),
+                    Arc::new(LayoutedStoreItem::new(site.clone(), sitemap.clone(), &assets.handlebars)?),
                 ))
             })
             .collect::<Result<_, Error>>()?;
@@ -244,13 +246,13 @@ pub struct LayoutedStoreItem {
 }
 
 impl LayoutedStoreItem {
-    pub fn new(rendered: Arc<RenderedStoreItem>, handlebars: &Handlebars<'static>) -> Result<LayoutedStoreItem, Error> {
+    pub fn new(rendered: Arc<RenderedStoreItem>, sitemap: Arc<SitemapStoreItem>, handlebars: &Handlebars<'static>) -> Result<LayoutedStoreItem, Error> {
         let documents = rendered.documents
             .iter()
             .map(|(name, document)| {
                 Ok((
                     name.clone(),
-                    Arc::new(LayoutedDocument::new(document.clone(), handlebars)?),
+                    Arc::new(LayoutedDocument::new(document.clone(), &sitemap.sitemap, handlebars)?),
                 ))
             })
             .collect::<Result<_, Error>>()?;
