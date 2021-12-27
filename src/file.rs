@@ -1,6 +1,4 @@
-use crate::{
-    site::SiteMetadata,
-};
+use crate::site::SiteMetadata;
 use std::{path::PathBuf, sync::Arc, time::SystemTime};
 
 #[derive(Eq, Clone, PartialEq, Debug)]

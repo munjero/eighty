@@ -3,9 +3,7 @@ mod file;
 mod site;
 mod store;
 
-use crate::{
-    store::{RenderedStore, SiteMetadataStore},
-};
+use crate::store::{RenderedStore, SiteMetadataStore};
 use clap::{App, Arg, SubCommand};
 use std::{fmt, path::Path, sync::Arc};
 
