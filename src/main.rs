@@ -3,8 +3,10 @@ mod file;
 mod site;
 mod store;
 
-use crate::document::RenderedDocument;
-use crate::store::{RenderedStore, SiteMetadataStore};
+use crate::{
+    document::RenderedDocument,
+    store::{RenderedStore, SiteMetadataStore},
+};
 use clap::{App, Arg, SubCommand};
 use std::{collections::HashMap, fmt, path::Path, sync::Arc};
 

@@ -1,12 +1,16 @@
-use crate::document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument};
-use crate::file::FileMetadata;
-use crate::site::{SiteMetadata, SiteName};
-use crate::Error;
+use crate::{
+    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
+    file::FileMetadata,
+    site::{SiteMetadata, SiteName},
+    Error,
+};
 use rayon::prelude::*;
-use std::collections::HashMap;
-use std::fs;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    fs,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 use walkdir::WalkDir;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
