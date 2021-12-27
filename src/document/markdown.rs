@@ -13,10 +13,7 @@ pub struct MarkdownOutput {
     pub toc: String,
 }
 
-pub fn process_markdown(
-    site_path: &Path,
-    rel_path: &Path,
-) -> Result<MarkdownOutput, Error> {
+pub fn process_markdown(site_path: &Path, rel_path: &Path) -> Result<MarkdownOutput, Error> {
     let output = Command::new("eighty-pandoc")
         .arg(rel_path)
         .current_dir(site_path)

@@ -3,7 +3,7 @@ use crate::{
     site::SiteMetadata,
     Error,
 };
-use std::{collections::HashMap, path::PathBuf, sync::Arc, fs};
+use std::{collections::HashMap, fs, path::PathBuf, sync::Arc};
 use walkdir::WalkDir;
 
 #[derive(Eq, Clone, PartialEq, Debug)]

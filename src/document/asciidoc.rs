@@ -33,10 +33,7 @@ pub struct AsciiDocOutputSpec {
     pub url: String,
 }
 
-pub fn process_asciidoc(
-    site_path: &Path,
-    rel_path: &Path,
-) -> Result<AsciiDocOutput, Error> {
+pub fn process_asciidoc(site_path: &Path, rel_path: &Path) -> Result<AsciiDocOutput, Error> {
     let output = Command::new("eighty-asciidoc")
         .arg(rel_path)
         .current_dir(site_path)

@@ -4,9 +4,9 @@ mod site;
 mod store;
 
 use crate::document::RenderedDocument;
-use crate::store::{SiteMetadataStore, RenderedStore};
+use crate::store::{RenderedStore, SiteMetadataStore};
 use clap::{App, Arg, SubCommand};
-use std::{fmt, path::Path, collections::HashMap, sync::Arc};
+use std::{collections::HashMap, fmt, path::Path, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {

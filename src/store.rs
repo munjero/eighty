@@ -1,13 +1,13 @@
-use std::sync::Arc;
+use crate::document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument};
+use crate::file::FileMetadata;
+use crate::site::{SiteMetadata, SiteName};
+use crate::Error;
+use rayon::prelude::*;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 use walkdir::WalkDir;
-use rayon::prelude::*;
-use crate::Error;
-use crate::site::{SiteName, SiteMetadata};
-use crate::file::FileMetadata;
-use crate::document::{RenderedDocument, DocumentName, DocumentMetadata, DocumentType};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct SiteMetadataStore {
@@ -42,7 +42,10 @@ impl SiteMetadataStore {
 
             println!("[{}] Generating the data for site ...", site_name);
 
-            let site = Arc::new(SiteMetadata::new(SiteName(site_name.clone()), &site_folder.path())?);
+            let site = Arc::new(SiteMetadata::new(
+                SiteName(site_name.clone()),
+                &site_folder.path(),
+            )?);
             let item = Arc::new(SiteMetadataStoreItem::new(site.clone())?);
 
             sites.insert(SiteName(site_name), item);
@@ -60,7 +63,9 @@ pub struct SiteMetadataStoreItem {
 }
 
 impl SiteMetadataStoreItem {
-    pub fn new(site: Arc<SiteMetadata>) -> Result<SiteMetadataStoreItem, Box<dyn std::error::Error>> {
+    pub fn new(
+        site: Arc<SiteMetadata>,
+    ) -> Result<SiteMetadataStoreItem, Box<dyn std::error::Error>> {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
@@ -115,7 +120,11 @@ impl SiteMetadataStoreItem {
             }
         }
 
-        Ok(SiteMetadataStoreItem { site, documents, files })
+        Ok(SiteMetadataStoreItem {
+            site,
+            documents,
+            files,
+        })
     }
 }
 
@@ -127,11 +136,21 @@ pub struct RenderedStore {
 
 impl RenderedStore {
     pub fn new(metadata: Arc<SiteMetadataStore>) -> Result<RenderedStore, Error> {
-        let documents = metadata.sites.par_iter().map(|(name, site)| {
-            Ok((name.clone(), Arc::new(RenderedStoreItem::new(site.clone())?)))
-        }).collect::<Result<_, Error>>()?;
+        let documents = metadata
+            .sites
+            .par_iter()
+            .map(|(name, site)| {
+                Ok((
+                    name.clone(),
+                    Arc::new(RenderedStoreItem::new(site.clone())?),
+                ))
+            })
+            .collect::<Result<_, Error>>()?;
 
-        Ok(RenderedStore { metadata, documents })
+        Ok(RenderedStore {
+            metadata,
+            documents,
+        })
     }
 }
 
@@ -143,10 +162,20 @@ pub struct RenderedStoreItem {
 
 impl RenderedStoreItem {
     pub fn new(metadata: Arc<SiteMetadataStoreItem>) -> Result<RenderedStoreItem, Error> {
-        let documents = metadata.documents.par_iter().map(|(name, document)| {
-            Ok((name.clone(), Arc::new(RenderedDocument::new(document.clone())?)))
-        }).collect::<Result<_, Error>>()?;
+        let documents = metadata
+            .documents
+            .par_iter()
+            .map(|(name, document)| {
+                Ok((
+                    name.clone(),
+                    Arc::new(RenderedDocument::new(document.clone())?),
+                ))
+            })
+            .collect::<Result<_, Error>>()?;
 
-        Ok(RenderedStoreItem { metadata, documents })
+        Ok(RenderedStoreItem {
+            metadata,
+            documents,
+        })
     }
 }
