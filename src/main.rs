@@ -4,11 +4,10 @@ mod site;
 mod store;
 
 use crate::{
-    document::RenderedDocument,
     store::{RenderedStore, SiteMetadataStore},
 };
 use clap::{App, Arg, SubCommand};
-use std::{collections::HashMap, fmt, path::Path, sync::Arc};
+use std::{fmt, path::Path, sync::Arc};
 
 #[derive(Debug)]
 pub enum Error {

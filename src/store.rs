@@ -93,6 +93,8 @@ impl SiteMetadataStoreItem {
             let entry = entry?;
 
             if entry.file_type().is_file() {
+                let modified = fs::metadata(entry.path())?.modified()?;
+
                 let typ = if let Some(extension) = entry.path().extension() {
                     let extension = extension.to_str().ok_or(Error::PathContainNonUnicode)?;
 
@@ -106,7 +108,7 @@ impl SiteMetadataStoreItem {
                 };
 
                 if let Some(typ) = typ {
-                    let document = DocumentMetadata::new(site.clone(), entry.path(), typ)?;
+                    let document = DocumentMetadata::new(site.clone(), entry.path(), typ, modified)?;
                     documents.insert(document.name.clone(), Arc::new(document));
                 } else {
                     let rel_file_path = entry.path().strip_prefix(&site.path)?;
@@ -117,6 +119,7 @@ impl SiteMetadataStoreItem {
                         path: rel_file_path.to_owned(),
                         source_path: entry.path().to_owned(),
                         content,
+                        modified,
                     };
 
                     files.insert(file.path.clone(), Arc::new(file));

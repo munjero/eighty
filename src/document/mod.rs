@@ -6,6 +6,7 @@ use std::{
     fmt,
     path::{Component, Path, PathBuf},
     sync::Arc,
+    time::SystemTime,
 };
 use tera::Tera;
 
@@ -43,29 +44,11 @@ pub enum DocumentType {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Document {
-    pub metadata: Arc<DocumentMetadata>,
-    pub rendered: Arc<RenderedDocument>,
-}
-
-impl Document {
-    pub fn new(
-        site: Arc<SiteMetadata>,
-        file_path: &Path,
-        typ: DocumentType,
-    ) -> Result<Document, Box<dyn std::error::Error>> {
-        let metadata = Arc::new(DocumentMetadata::new(site.clone(), file_path, typ)?);
-        let rendered = Arc::new(RenderedDocument::new(metadata.clone())?);
-
-        Ok(Document { metadata, rendered })
-    }
-}
-
-#[derive(Eq, Clone, PartialEq, Debug)]
 pub struct DocumentMetadata {
     pub site: Arc<SiteMetadata>,
     pub name: DocumentName,
     pub typ: DocumentType,
+    pub modified: SystemTime,
     pub source_path: PathBuf,
 }
 
@@ -74,6 +57,7 @@ impl DocumentMetadata {
         site: Arc<SiteMetadata>,
         file_path: &Path,
         typ: DocumentType,
+        modified: SystemTime,
     ) -> Result<DocumentMetadata, Box<dyn std::error::Error>> {
         let rel_file_path = file_path.strip_prefix(&site.path)?;
         let name = derive_name(&rel_file_path)?;
@@ -82,6 +66,7 @@ impl DocumentMetadata {
             site,
             name,
             source_path: file_path.to_owned(),
+            modified,
             typ,
         })
     }

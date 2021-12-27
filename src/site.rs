@@ -1,14 +1,10 @@
-use crate::Error;
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     fmt,
-    fs::{self, File},
+    fs::File,
     io::BufReader,
     path::{Path, PathBuf},
-    sync::Arc,
 };
-use tera::Tera;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct SiteName(pub String);
