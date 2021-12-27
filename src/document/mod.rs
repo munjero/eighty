@@ -1,5 +1,8 @@
 mod asciidoc;
 mod markdown;
+mod layout;
+
+pub use self::layout::LayoutedDocument;
 
 use crate::{site::SiteMetadata, Error};
 use std::{
@@ -8,7 +11,6 @@ use std::{
     sync::Arc,
     time::SystemTime,
 };
-use tera::Tera;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct DocumentName {
@@ -98,6 +100,10 @@ impl DocumentMetadata {
             modified,
             typ,
         })
+    }
+
+    pub fn url(&self) -> String {
+        format!("{}{:?}", self.site.config.url, self.name.folder_path())
     }
 }
 

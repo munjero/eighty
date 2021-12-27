@@ -1,5 +1,5 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
+    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument, LayoutedDocument},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     Error,
@@ -12,6 +12,7 @@ use std::{
     sync::Arc,
 };
 use walkdir::WalkDir;
+use handlebars::Handlebars;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct SiteMetadataStore {
@@ -138,7 +139,6 @@ impl SiteMetadataStoreItem {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedStore {
-    pub metadata: Arc<SiteMetadataStore>,
     pub documents: HashMap<SiteName, Arc<RenderedStoreItem>>,
 }
 
@@ -156,7 +156,6 @@ impl RenderedStore {
             .collect::<Result<_, Error>>()?;
 
         Ok(RenderedStore {
-            metadata,
             documents,
         })
     }
@@ -164,7 +163,6 @@ impl RenderedStore {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedStoreItem {
-    pub metadata: Arc<SiteMetadataStoreItem>,
     pub documents: HashMap<DocumentName, Arc<RenderedDocument>>,
 }
 
@@ -182,14 +180,15 @@ impl RenderedStoreItem {
             .collect::<Result<_, Error>>()?;
 
         Ok(RenderedStoreItem {
-            metadata,
             documents,
         })
     }
 }
 
+#[derive(Clone, Debug)]
 pub struct AssetStore {
     pub assets: HashMap<PathBuf, Vec<u8>>,
+    pub handlebars: Handlebars<'static>,
 }
 
 impl AssetStore {
@@ -215,6 +214,57 @@ impl AssetStore {
             }
         }
 
-        Ok(AssetStore { assets })
+        let mut handlebars = Handlebars::new();
+        handlebars.set_strict_mode(true);
+        handlebars.register_templates_directory(".hbs", asset_path.join("layouts"))?;
+
+        Ok(AssetStore { assets, handlebars, })
+    }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct LayoutedStore {
+    pub documents: HashMap<SiteName, Arc<LayoutedStoreItem>>,
+}
+
+impl LayoutedStore {
+    pub fn new(rendered: Arc<RenderedStore>, assets: Arc<AssetStore>) -> Result<LayoutedStore, Error> {
+        let documents = rendered
+            .documents
+            .iter()
+            .map(|(name, site)| {
+                Ok((
+                    name.clone(),
+                    Arc::new(LayoutedStoreItem::new(site.clone(), &assets.handlebars)?),
+                ))
+            })
+            .collect::<Result<_, Error>>()?;
+
+        Ok(LayoutedStore {
+            documents,
+        })
+    }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct LayoutedStoreItem {
+    pub documents: HashMap<DocumentName, Arc<LayoutedDocument>>,
+}
+
+impl LayoutedStoreItem {
+    pub fn new(rendered: Arc<RenderedStoreItem>, handlebars: &Handlebars<'static>) -> Result<LayoutedStoreItem, Error> {
+        let documents = rendered.documents
+            .iter()
+            .map(|(name, document)| {
+                Ok((
+                    name.clone(),
+                    Arc::new(LayoutedDocument::new(document.clone(), handlebars)?),
+                ))
+            })
+            .collect::<Result<_, Error>>()?;
+
+        Ok(LayoutedStoreItem {
+            documents,
+        })
     }
 }

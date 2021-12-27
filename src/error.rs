@@ -14,6 +14,8 @@ pub enum Error {
     SiteNotExist,
     DocumentNotFound,
     HyperHttp(hyper::http::Error),
+    HandlebarsTemplate(handlebars::TemplateError),
+    HandlebarsRender(handlebars::RenderError),
 }
 
 impl fmt::Display for Error {
@@ -57,5 +59,17 @@ impl From<tokio::task::JoinError> for Error {
 impl From<hyper::http::Error> for Error {
     fn from(err: hyper::http::Error) -> Error {
         Error::HyperHttp(err)
+    }
+}
+
+impl From<handlebars::TemplateError> for Error {
+    fn from(err: handlebars::TemplateError) -> Error {
+        Error::HandlebarsTemplate(err)
+    }
+}
+
+impl From<handlebars::RenderError> for Error {
+    fn from(err: handlebars::RenderError) -> Error {
+        Error::HandlebarsRender(err)
     }
 }
