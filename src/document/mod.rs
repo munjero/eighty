@@ -166,10 +166,11 @@ pub struct RenderedDocument {
 impl RenderedDocument {
     pub fn new(
         document: Arc<DocumentMetadata>,
-    ) -> Result<RenderedDocument, Box<dyn std::error::Error>> {
+    ) -> Result<RenderedDocument, Error> {
         println!("[{}] Rendering document {} ...", document.site.name, document.name);
 
-        let rel_file_path = document.source_path.strip_prefix(&document.site.path)?;
+        let rel_file_path = document.source_path.strip_prefix(&document.site.path)
+            .map_err(|_| Error::InvalidPathComponent)?;
 
         Ok(match document.typ {
             DocumentType::AsciiDoc => {

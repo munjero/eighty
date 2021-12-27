@@ -1,4 +1,3 @@
-use crate::file::FileStore;
 use crate::Error;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -12,7 +11,7 @@ use std::{
 use tera::Tera;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
-pub struct SiteName(String);
+pub struct SiteName(pub String);
 
 impl fmt::Display for SiteName {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -63,64 +62,5 @@ impl SiteMetadata {
         };
 
         Ok(site)
-    }
-}
-
-#[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Site {
-    pub metadata: Arc<SiteMetadata>,
-    pub files: Arc<FileStore>,
-}
-
-impl Site {
-    pub fn new(name: SiteName, path: &Path) -> Result<Site, Box<dyn std::error::Error>> {
-        println!("[{}] Generating the data for site ...", name);
-
-        let metadata = Arc::new(SiteMetadata::new(name, path)?);
-        let files = Arc::new(FileStore::new(metadata.clone())?);
-
-        Ok(Site { metadata, files })
-    }
-}
-
-#[derive(Eq, Clone, PartialEq, Debug)]
-pub struct SiteStore(HashMap<SiteName, Arc<Site>>);
-
-impl SiteStore {
-    pub fn new(root_path: &Path) -> Result<SiteStore, Box<dyn std::error::Error>> {
-        let mut sites = HashMap::new();
-
-        let root_subfolders = fs::read_dir(root_path)?;
-
-        let tera = Arc::new(
-            Tera::new(
-                root_path.join("_assets/layouts/**/*.html")
-                    .to_str().ok_or(Error::PathContainNonUnicode)?
-            )?
-        );
-
-        println!("{:?}", tera);
-
-        for site_folder in root_subfolders {
-            let site_folder = site_folder?;
-            let site_name = site_folder
-                .file_name()
-                .into_string()
-                .map_err(|_| Error::PathContainNonUnicode)?;
-
-            if site_name.starts_with(".") || site_name.starts_with("_") {
-                continue;
-            }
-
-            let site = Site::new(SiteName(site_name.clone()), &site_folder.path())?;
-
-            sites.insert(SiteName(site_name), Arc::new(site));
-        }
-
-        Ok(SiteStore(sites))
-    }
-
-    pub fn sites(&self) -> impl Iterator<Item=&Arc<Site>> {
-        self.0.values()
     }
 }

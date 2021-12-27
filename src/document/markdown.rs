@@ -16,14 +16,14 @@ pub struct MarkdownOutput {
 pub fn process_markdown(
     site_path: &Path,
     rel_path: &Path,
-) -> Result<MarkdownOutput, Box<dyn std::error::Error>> {
+) -> Result<MarkdownOutput, Error> {
     let output = Command::new("eighty-pandoc")
         .arg(rel_path)
         .current_dir(site_path)
         .output()?;
 
     if !output.status.success() {
-        return Err(Box::new(Error::RunCommandFailed));
+        return Err(Error::RunCommandFailed);
     }
 
     Ok(serde_json::from_slice(&output.stdout)?)

@@ -36,14 +36,14 @@ pub struct AsciiDocOutputSpec {
 pub fn process_asciidoc(
     site_path: &Path,
     rel_path: &Path,
-) -> Result<AsciiDocOutput, Box<dyn std::error::Error>> {
+) -> Result<AsciiDocOutput, Error> {
     let output = Command::new("eighty-asciidoc")
         .arg(rel_path)
         .current_dir(site_path)
         .output()?;
 
     if !output.status.success() {
-        return Err(Box::new(Error::RunCommandFailed));
+        return Err(Error::RunCommandFailed);
     }
 
     Ok(serde_json::from_slice(&output.stdout)?)
