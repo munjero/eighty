@@ -4,12 +4,13 @@ use std::convert::Infallible;
 use std::net::SocketAddr;
 use hyper::{Body, Request, Response, Server};
 use hyper::service::{make_service_fn, service_fn};
-use crate::store::{RenderedStore, SiteMetadataStore};
+use crate::store::{RenderedStore, SiteMetadataStore, AssetStore};
 use crate::site::SiteName;
 
 pub struct Context {
     pub metadata: Arc<SiteMetadataStore>,
     pub rendered: Arc<RenderedStore>,
+    pub assets: Arc<AssetStore>,
     pub site_name: SiteName,
 }
 
@@ -20,12 +21,20 @@ async fn handle(req: Request<Body>, context: Arc<Context>) -> Result<Response<Bo
     let uri_path = Path::new(req.uri().path());
     let rel_path = uri_path.strip_prefix(&site.site.config.base_url)?;
 
-    let document_name = rendered.documents.keys().find(|item| item.is_matched(&rel_path)).ok_or(Error::DocumentNotFound)?;
-    let document = rendered.documents.get(&document_name).ok_or(Error::DocumentNotFound)?;
+    if let Some(document_name) = rendered.documents.keys().find(|item| item.is_matched(&rel_path)) {
+        let document = rendered.documents.get(&document_name).ok_or(Error::DocumentNotFound)?;
 
-    Ok(Response::builder()
-       .header("Content-Type", "text/html")
-       .body(document.content.clone().into())?)
+        return Ok(Response::builder()
+                  .header("Content-Type", "text/html")
+                  .body(document.content.clone().into())?)
+    }
+
+    if let Some(asset_content) = context.assets.assets.get(rel_path) {
+        return Ok(Response::builder()
+                  .body(asset_content.clone().into())?)
+    }
+
+    return Err(Error::DocumentNotFound)
 }
 
 #[tokio::main]
@@ -58,10 +67,12 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
     let context = tokio::task::spawn_blocking(move || -> Result<_, Error> {
         let site_metadata_store = Arc::new(SiteMetadataStore::new(&root_path)?);
         let rendered_store = Arc::new(RenderedStore::new(site_metadata_store.clone())?);
+        let asset_store = Arc::new(AssetStore::new(&root_path)?);
 
         let context = Context {
             metadata: site_metadata_store,
             rendered: rendered_store,
+            assets: asset_store,
             site_name,
         };
 
