@@ -12,7 +12,7 @@ use std::{
     time::SystemTime,
 };
 
-#[derive(Hash, Eq, Clone, PartialEq, Debug)]
+#[derive(Hash, Eq, Clone, PartialEq, Debug, PartialOrd, Ord)]
 pub struct DocumentName {
     pub labels: Vec<String>,
     pub post: Option<DocumentPostLabel>,
@@ -60,9 +60,33 @@ impl DocumentName {
     pub fn is_matched(&self, other: &Path) -> bool {
         other == self.path() || other == self.folder_path()
     }
+
+    pub fn is_ancestor_of(&self, child: &Self) -> bool {
+        if self.post.is_some() {
+            return false
+        }
+
+        if self.labels.len() > child.labels.len() {
+            return false
+        }
+
+        if self.labels[0..self.labels.len()] != child.labels[0..self.labels.len()] {
+            return false
+        }
+
+        if self.labels.len() == child.labels.len() {
+            return self.post.is_none() && child.post.is_some()
+        }
+
+        return true
+    }
+
+    pub fn is_root(&self) -> bool {
+        self.post.is_none() && self.labels.is_empty()
+    }
 }
 
-#[derive(Hash, Eq, Clone, PartialEq, Debug)]
+#[derive(Hash, Eq, Clone, PartialEq, Debug, PartialOrd, Ord)]
 pub struct DocumentPostLabel {
     pub date: String,
     pub label: String,

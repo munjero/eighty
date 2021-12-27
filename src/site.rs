@@ -7,7 +7,7 @@ use std::{
 };
 use crate::Error;
 
-#[derive(Hash, Eq, Clone, PartialEq, Debug)]
+#[derive(Hash, Eq, Clone, PartialEq, Debug, PartialOrd, Ord)]
 pub struct SiteName(pub String);
 
 impl fmt::Display for SiteName {

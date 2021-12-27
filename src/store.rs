@@ -2,6 +2,7 @@ use crate::{
     document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument, LayoutedDocument},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
+    sitemap::{Sitemap, LocalSitemap},
     Error,
 };
 use rayon::prelude::*;
@@ -24,15 +25,6 @@ impl SiteMetadataStore {
         let mut sites = HashMap::new();
 
         let root_subfolders = fs::read_dir(root_path)?;
-
-        // let tera = Arc::new(
-        //     Tera::new(
-        //         root_path.join("_assets/layouts/**/*.html")
-        //             .to_str().ok_or(Error::PathContainNonUnicode)?
-        //     )?
-        // );
-
-        // println!("{:?}", tera);
 
         for site_folder in root_subfolders {
             let site_folder = site_folder?;
@@ -266,5 +258,66 @@ impl LayoutedStoreItem {
         Ok(LayoutedStoreItem {
             documents,
         })
+    }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct SitemapStore {
+    pub sitemaps: HashMap<SiteName, Arc<SitemapStoreItem>>,
+}
+
+impl SitemapStore {
+    pub fn new(rendered: Arc<RenderedStore>) -> Result<SitemapStore, Error> {
+        let sitemaps = rendered
+            .documents
+            .iter()
+            .map(|(name, site)| {
+                Ok((
+                    name.clone(),
+                    Arc::new(SitemapStoreItem::new(site.clone())?),
+                ))
+            })
+            .collect::<Result<_, Error>>()?;
+
+        Ok(SitemapStore {
+            sitemaps
+        })
+    }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct SitemapStoreItem {
+    pub sitemap: Sitemap,
+    pub local_sitemaps: HashMap<DocumentName, LocalSitemap>,
+}
+
+impl SitemapStoreItem {
+    pub fn new(rendered: Arc<RenderedStoreItem>) -> Result<SitemapStoreItem, Error> {
+        let ordered_name_titles = {
+            let mut name_titles = rendered
+                .documents
+                .iter()
+                .map(|(k, v)| (k.clone(), v.title.clone()))
+                .collect::<Vec<_>>();
+
+            name_titles.sort_by_key(|(k, _)| k.clone());
+            name_titles
+        };
+
+        let mut sitemap = Sitemap { items: Vec::new() };
+        for (name, title) in &ordered_name_titles {
+            if !name.is_root() {
+                sitemap.insert(name.clone(), title.clone());
+            }
+        }
+
+        let mut local_sitemaps = HashMap::new();
+        for (name, _) in &ordered_name_titles {
+            if let Some(local_sitemap) = sitemap.local(&name) {
+                local_sitemaps.insert(name.clone(), local_sitemap);
+            }
+        }
+
+        Ok(SitemapStoreItem { sitemap, local_sitemaps })
     }
 }

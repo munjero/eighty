@@ -1,10 +1,9 @@
 use std::{path::Path, sync::Arc};
 use crate::Error;
-use std::convert::Infallible;
 use std::net::SocketAddr;
 use hyper::{Body, Request, Response, Server};
 use hyper::service::{make_service_fn, service_fn};
-use crate::store::{RenderedStore, SiteMetadataStore, AssetStore, LayoutedStore};
+use crate::store::{RenderedStore, SiteMetadataStore, AssetStore, LayoutedStore, SitemapStore};
 use crate::site::SiteName;
 
 pub struct Context {
@@ -12,6 +11,7 @@ pub struct Context {
     pub rendered: Arc<RenderedStore>,
     pub assets: Arc<AssetStore>,
     pub layouted: Arc<LayoutedStore>,
+    pub sitemaps: Arc<SitemapStore>,
     pub site_name: SiteName,
 }
 
@@ -70,12 +70,14 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
         let rendered_store = Arc::new(RenderedStore::new(site_metadata_store.clone())?);
         let asset_store = Arc::new(AssetStore::new(&root_path)?);
         let layouted_store = Arc::new(LayoutedStore::new(rendered_store.clone(), asset_store.clone())?);
+        let sitemap_store = Arc::new(SitemapStore::new(rendered_store.clone())?);
 
         let context = Context {
             metadata: site_metadata_store,
             rendered: rendered_store,
             assets: asset_store,
             layouted: layouted_store,
+            sitemaps: sitemap_store,
             site_name,
         };
 

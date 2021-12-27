@@ -4,12 +4,12 @@ mod site;
 mod store;
 mod command;
 mod error;
+mod sitemap;
 
 pub use crate::error::Error;
 
-use crate::store::{RenderedStore, SiteMetadataStore};
 use clap::{App, Arg, SubCommand};
-use std::{fmt, path::Path, sync::Arc};
+use std::{path::Path};
 
 fn main() -> Result<(), Error> {
     let matches = App::new("Eighty")
