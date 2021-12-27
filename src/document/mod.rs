@@ -58,7 +58,7 @@ impl DocumentMetadata {
         file_path: &Path,
         typ: DocumentType,
         modified: SystemTime,
-    ) -> Result<DocumentMetadata, Box<dyn std::error::Error>> {
+    ) -> Result<DocumentMetadata, Error> {
         let rel_file_path = file_path.strip_prefix(&site.path)?;
         let name = derive_name(&rel_file_path)?;
 
@@ -89,7 +89,7 @@ impl DocumentMetadata {
     }
 }
 
-fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error::Error>> {
+fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Error> {
     let mut labels = Vec::new();
     let mut is_post = false;
     let mut components = rel_file_path.components().peekable();
@@ -111,7 +111,7 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Box<dyn std::error:
                 labels.push(component_name.to_owned());
             }
         } else {
-            return Err(Box::new(Error::InvalidPathComponent));
+            return Err(Error::InvalidPathComponent);
         }
     }
 
@@ -154,8 +154,7 @@ impl RenderedDocument {
 
         let rel_file_path = document
             .source_path
-            .strip_prefix(&document.site.path)
-            .map_err(|_| Error::InvalidPathComponent)?;
+            .strip_prefix(&document.site.path)?;
 
         Ok(match document.typ {
             DocumentType::AsciiDoc => {

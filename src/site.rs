@@ -5,6 +5,7 @@ use std::{
     io::BufReader,
     path::{Path, PathBuf},
 };
+use crate::Error;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug)]
 pub struct SiteName(pub String);
@@ -47,7 +48,7 @@ pub struct SiteMetadata {
 }
 
 impl SiteMetadata {
-    pub fn new(name: SiteName, path: &Path) -> Result<SiteMetadata, Box<dyn std::error::Error>> {
+    pub fn new(name: SiteName, path: &Path) -> Result<SiteMetadata, Error> {
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 

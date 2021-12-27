@@ -19,7 +19,7 @@ pub struct SiteMetadataStore {
 }
 
 impl SiteMetadataStore {
-    pub fn new(root_path: &Path) -> Result<SiteMetadataStore, Box<dyn std::error::Error>> {
+    pub fn new(root_path: &Path) -> Result<SiteMetadataStore, Error> {
         let mut sites = HashMap::new();
 
         let root_subfolders = fs::read_dir(root_path)?;
@@ -69,7 +69,7 @@ pub struct SiteMetadataStoreItem {
 impl SiteMetadataStoreItem {
     pub fn new(
         site: Arc<SiteMetadata>,
-    ) -> Result<SiteMetadataStoreItem, Box<dyn std::error::Error>> {
+    ) -> Result<SiteMetadataStoreItem, Error> {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
