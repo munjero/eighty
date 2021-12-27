@@ -9,6 +9,8 @@ pub enum Error {
     Json(serde_json::Error),
     StripPrefix(std::path::StripPrefixError),
     WalkDir(walkdir::Error),
+
+    TokioJoin(tokio::task::JoinError),
 }
 
 impl fmt::Display for Error {
@@ -40,5 +42,11 @@ impl From<std::path::StripPrefixError> for Error {
 impl From<walkdir::Error> for Error {
     fn from(err: walkdir::Error) -> Error {
         Error::WalkDir(err)
+    }
+}
+
+impl From<tokio::task::JoinError> for Error {
+    fn from(err: tokio::task::JoinError) -> Error {
+        Error::TokioJoin(err)
     }
 }
