@@ -295,26 +295,16 @@ pub struct SitemapStoreItem {
 
 impl SitemapStoreItem {
     pub fn new(rendered: Arc<RenderedStoreItem>) -> Result<SitemapStoreItem, Error> {
-        let ordered_name_titles = {
-            let mut name_titles = rendered
-                .documents
-                .iter()
-                .map(|(k, v)| (k.clone(), v.title.clone()))
-                .collect::<Vec<_>>();
+        let name_titles = rendered
+            .documents
+            .iter()
+            .map(|(k, v)| (k.clone(), v.title.clone()))
+            .collect::<Vec<_>>();
 
-            name_titles.sort_by_key(|(k, _)| k.clone());
-            name_titles
-        };
-
-        let mut sitemap = Sitemap { items: Vec::new() };
-        for (name, title) in &ordered_name_titles {
-            if !name.is_root() {
-                sitemap.insert(name.clone(), title.clone());
-            }
-        }
+        let sitemap = Sitemap::from(name_titles.clone());
 
         let mut local_sitemaps = HashMap::new();
-        for (name, _) in &ordered_name_titles {
+        for (name, _) in &name_titles {
             if let Some(local_sitemap) = sitemap.local(&name) {
                 local_sitemaps.insert(name.clone(), local_sitemap);
             }

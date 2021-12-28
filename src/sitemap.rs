@@ -112,6 +112,22 @@ impl Sitemap {
     }
 }
 
+impl From<Vec<(DocumentName, String)>> for Sitemap {
+    fn from(mut name_titles: Vec<(DocumentName, String)>) -> Sitemap {
+        name_titles.sort_by_key(|(k, _)| k.clone());
+        let ordered_name_titles = name_titles;
+
+        let mut sitemap = Sitemap { items: Vec::new() };
+        for (name, title) in &ordered_name_titles {
+            if !name.is_root() {
+                sitemap.insert(name.clone(), title.clone());
+            }
+        }
+
+        sitemap
+    }
+}
+
 impl fmt::Display for Sitemap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         for child in &self.items {
