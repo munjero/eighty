@@ -7,7 +7,7 @@ use std::ops::Deref;
 use std::sync::Arc;
 use crate::site::SiteMetadata;
 
-pub struct SimplePostWorkspace(HashMap<SiteName, SimplePostSite>);
+pub struct SimplePostWorkspace(pub HashMap<SiteName, SimplePostSite>);
 
 impl SimplePostWorkspace {
     pub fn new(full: &FullWorkspace) -> Result<Self, Error> {
