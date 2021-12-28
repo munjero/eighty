@@ -14,7 +14,7 @@ pub struct AsciiDocOutput {
 pub struct AsciiDocOutputDocument {
     pub title: String,
     pub license: Option<String>,
-    pub licence_code: Option<String>,
+    pub license_code: Option<String>,
     pub author: Option<String>,
     pub email: Option<String>,
     pub order: Option<usize>,

@@ -178,6 +178,11 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Error> {
 pub struct RenderedData {
     pub title: String,
     pub content: String,
+    pub toc: Option<String>,
+    pub description: String,
+    pub description_content: String,
+    pub license: Option<String>,
+    pub license_code: Option<String>,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
@@ -206,6 +211,11 @@ impl RenderedDocument {
                     data: Arc::new(RenderedData {
                         title: output.document.title,
                         content: output.document.content,
+                        toc: output.document.toc,
+                        description: output.document.description.clone(),
+                        description_content: output.document.description,
+                        license: output.document.license,
+                        license_code: output.document.license_code,
                     }),
                 }
             }
@@ -218,6 +228,11 @@ impl RenderedDocument {
                     data: Arc::new(RenderedData {
                         title: output.title,
                         content: output.content,
+                        toc: Some(output.toc),
+                        description: output.description,
+                        description_content: output.description_content,
+                        license: None,
+                        license_code: None,
                     }),
                 }
             }

@@ -76,8 +76,8 @@ pub fn layout(
         site_base_url: site_config.base_url.clone(),
 
         page_title: rendered.data.title.clone(),
-        page_description: None,
-        page_description_content: None,
+        page_description: Some(rendered.data.description.clone()),
+        page_description_content: Some(rendered.data.description_content.clone()),
         page_url: format!(
             "{}{}",
             rendered.site_metadata.config.url,
@@ -85,9 +85,12 @@ pub fn layout(
         ),
 
         has_site_links: false,
-        site_links: Vec::new(),
+        site_links: site_config.links.iter().map(|link| DocumentContextSiteLink {
+            url: link.url.clone(),
+            name: link.name.clone(),
+        }).collect(),
 
-        toc: None,
+        toc: rendered.data.toc.clone(),
         page_content: rendered.data.content.clone(),
 
         page_author_url: "https://social.that.world/@wei".to_string(),
