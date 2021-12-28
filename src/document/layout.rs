@@ -77,7 +77,7 @@ pub fn layout(
 
         page_title: rendered.data.title.clone(),
         page_description: Some(rendered.data.description.clone()),
-        page_description_content: Some(rendered.data.description_content.clone()),
+        page_description_content: rendered.data.description_content.clone(),
         page_url: format!(
             "{}{}",
             rendered.site_metadata.config.url,
