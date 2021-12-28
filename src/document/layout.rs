@@ -97,8 +97,8 @@ pub fn layout(
         page_author: "Wei Tang".to_string(),
         page_copyright_years: "2019-2021".to_string(),
 
-        page_license: None,
-        page_license_code: None,
+        page_license: rendered.data.license.clone(),
+        page_license_code: rendered.data.license_code.clone(),
 
         sitemap: sitemap.iter().map(|child| child.clone().into()).collect(),
     };
