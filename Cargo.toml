@@ -13,3 +13,4 @@ rayon = "1.5"
 hyper = { version = "0.14", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
 handlebars = { version = "4.1", features = ["dir_source"] }
+notify = "4.0"

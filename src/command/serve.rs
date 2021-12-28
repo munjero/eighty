@@ -7,7 +7,10 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Response, Server, StatusCode,
 };
-use std::{net::SocketAddr, path::Path, sync::Arc};
+use std::{net::SocketAddr, path::Path, sync::{Arc, RwLock}, thread, fs};
+use std::sync::mpsc::channel;
+use notify::{RecommendedWatcher, Watcher, RecursiveMode, DebouncedEvent};
+use std::time::Duration;
 
 pub struct Context {
     pub metadatad: MetadatadWorkspace,
@@ -17,7 +20,8 @@ pub struct Context {
     pub site_name: SiteName,
 }
 
-async fn handle(req: Request<Body>, context: Arc<Context>) -> Result<Response<Body>, Error> {
+async fn handle(req: Request<Body>, context: Arc<RwLock<Context>>) -> Result<Response<Body>, Error> {
+    let context = context.read()?;
     let site = context
         .post
         .get(&context.site_name)
@@ -47,7 +51,53 @@ async fn handle(req: Request<Body>, context: Arc<Context>) -> Result<Response<Bo
 pub async fn serve(root_path: &Path, site_name: &str) -> Result<(), Error> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
 
-    let context = Arc::new(build(root_path, SiteName(site_name.to_string())).await?);
+    let context = Arc::new(RwLock::new(async_build(root_path, SiteName(site_name.to_string())).await?));
+
+    let root_path = root_path.to_owned();
+    let site_name = site_name.to_owned();
+    let watch_context = context.clone();
+
+    thread::spawn(move || {
+        let watching = || -> Result<(), Error> {
+            let (tx, rx) = channel();
+
+            let mut watcher: RecommendedWatcher = Watcher::new(tx, Duration::from_secs(2))?;
+            watcher.watch(root_path.clone(), RecursiveMode::Recursive)?;
+
+            loop {
+                match rx.recv() {
+                    Ok(event) => {
+                        let should_rebuild = match event {
+                            DebouncedEvent::NoticeWrite(path) | DebouncedEvent::NoticeRemove(path) |
+                            DebouncedEvent::Create(path) | DebouncedEvent::Write(path) |
+                            DebouncedEvent::Chmod(path) | DebouncedEvent::Remove(path) => {
+                                should_rebuild_for_path(&path, &root_path)?
+                            },
+                            DebouncedEvent::Rename(p1, p2) => {
+                                should_rebuild_for_path(&p1, &root_path)? ||
+                                    should_rebuild_for_path(&p2, &root_path)?
+                            },
+                            DebouncedEvent::Rescan => true,
+                            DebouncedEvent::Error(err, _) => return Err(Error::Notify(err)),
+                        };
+
+                        if should_rebuild {
+                            let mut context = watch_context.write()?;
+                            *context = build(&root_path, SiteName(site_name.to_string()), Some(&context))?;
+
+                            println!("[workspace] rebuilt after source folder changes");
+                        }
+                    },
+                    Err(e) => println!("watch error: {:?}", e),
+                }
+            }
+        };
+
+        match watching() {
+            Ok(()) => println!("watching thread returned"),
+            Err(e) => println!("watching thread error: {:?}", e),
+        }
+    });
 
     let make_svc = make_service_fn(move |_conn| {
         let context = context.clone();
@@ -57,7 +107,7 @@ pub async fn serve(root_path: &Path, site_name: &str) -> Result<(), Error> {
 
     let server = Server::bind(&addr).serve(make_svc);
 
-    println!("listening on port 8000");
+    println!("[server] listening on port 8000");
     if let Err(e) = server.await {
         eprintln!("server error: {}", e);
     }
@@ -65,26 +115,41 @@ pub async fn serve(root_path: &Path, site_name: &str) -> Result<(), Error> {
     Ok(())
 }
 
-async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> {
+async fn async_build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> {
     let root_path = root_path.to_owned();
 
     let context = tokio::task::spawn_blocking(move || -> Result<_, Error> {
-        let metadatad = MetadatadWorkspace::new(&root_path)?;
-        let rendered = RenderedWorkspace::new(&metadatad)?;
-        let full = FullWorkspace::new(&rendered)?;
-        let post = SimplePostWorkspace::new(&full)?;
-
-        let context = Context {
-            metadatad,
-            rendered,
-            full,
-            post,
-            site_name,
-        };
-
-        Ok(context)
+        build(&root_path, site_name, None)
     })
     .await??;
 
     Ok(context)
+}
+
+fn build(root_path: &Path, site_name: SiteName, old: Option<&Context>) -> Result<Context, Error> {
+    let metadatad = MetadatadWorkspace::new(&root_path)?;
+    let rendered = if let Some(old) = old {
+        RenderedWorkspace::new_with_old(&metadatad, &old.rendered)?
+    } else {
+        RenderedWorkspace::new(&metadatad)?
+    };
+    let full = FullWorkspace::new(&rendered)?;
+    let post = SimplePostWorkspace::new(&full)?;
+
+    let context = Context {
+        metadatad,
+        rendered,
+        full,
+        post,
+        site_name,
+    };
+
+    Ok(context)
+}
+
+fn should_rebuild_for_path(path: &Path, root_path: &Path) -> Result<bool, Error> {
+    let root_path = fs::canonicalize(root_path)?;
+
+    let rel_path = path.strip_prefix(&root_path)?;
+    Ok(rel_path.iter().all(|label| !label.to_str().map(|l| l.starts_with(".")).unwrap_or(false)))
 }

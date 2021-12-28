@@ -16,6 +16,9 @@ pub enum Error {
     HyperHttp(hyper::http::Error),
     HandlebarsTemplate(handlebars::TemplateError),
     HandlebarsRender(handlebars::RenderError),
+
+    Poisoned,
+    Notify(notify::Error),
 }
 
 impl fmt::Display for Error {
@@ -71,5 +74,17 @@ impl From<handlebars::TemplateError> for Error {
 impl From<handlebars::RenderError> for Error {
     fn from(err: handlebars::RenderError) -> Error {
         Error::HandlebarsRender(err)
+    }
+}
+
+impl<T> From<std::sync::PoisonError<T>> for Error {
+    fn from(_: std::sync::PoisonError<T>) -> Error {
+        Error::Poisoned
+    }
+}
+
+impl From<notify::Error> for Error {
+    fn from(err: notify::Error) -> Error {
+        Error::Notify(err)
     }
 }
