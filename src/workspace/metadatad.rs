@@ -61,7 +61,7 @@ impl Deref for MetadatadWorkspace {
 pub struct MetadatadSite {
     pub site: Arc<SiteMetadata>,
     pub documents: HashMap<DocumentName, Arc<DocumentMetadata>>,
-    pub files: HashMap<PathBuf, Arc<FileMetadata>>,
+    pub files: Arc<HashMap<PathBuf, FileMetadata>>,
 }
 
 impl MetadatadSite {
@@ -121,7 +121,7 @@ impl MetadatadSite {
                         modified,
                     };
 
-                    files.insert(file.path.clone(), Arc::new(file));
+                    files.insert(file.path.clone(), file);
                 }
             }
         }
@@ -129,7 +129,7 @@ impl MetadatadSite {
         Ok(Self {
             site,
             documents,
-            files,
+            files: Arc::new(files),
         })
     }
 }

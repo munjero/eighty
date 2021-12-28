@@ -3,13 +3,13 @@ use crate::Error;
 use std::net::SocketAddr;
 use hyper::{Body, Request, Response, Server};
 use hyper::service::{make_service_fn, service_fn};
-use crate::store::{RenderedStore, AssetStore, LayoutedStore, SitemapStore};
-use crate::workspace::MetadatadWorkspace;
+use crate::store::{AssetStore, LayoutedStore, SitemapStore};
+use crate::workspace::{MetadatadWorkspace, RenderedWorkspace};
 use crate::site::SiteName;
 
 pub struct Context {
     pub metadata: Arc<MetadatadWorkspace>,
-    pub rendered: Arc<RenderedStore>,
+    pub rendered: Arc<RenderedWorkspace>,
     pub assets: Arc<AssetStore>,
     pub layouted: Arc<LayoutedStore>,
     pub sitemaps: Arc<SitemapStore>,
@@ -68,7 +68,7 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
 
     let context = tokio::task::spawn_blocking(move || -> Result<_, Error> {
         let site_metadata_store = Arc::new(MetadatadWorkspace::new(&root_path)?);
-        let rendered_store = Arc::new(RenderedStore::new(&site_metadata_store)?);
+        let rendered_store = Arc::new(RenderedWorkspace::new(&site_metadata_store)?);
         let asset_store = Arc::new(AssetStore::new(&root_path)?);
         let sitemap_store = Arc::new(SitemapStore::new(&rendered_store)?);
         let layouted_store = Arc::new(LayoutedStore::new(&rendered_store, &sitemap_store, &asset_store)?);
