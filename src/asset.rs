@@ -1,5 +1,5 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument, LayoutedDocument},
+    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     sitemap::{Sitemap, LocalSitemap},

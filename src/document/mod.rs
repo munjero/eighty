@@ -2,7 +2,7 @@ mod asciidoc;
 mod markdown;
 mod layout;
 
-pub use self::layout::LayoutedDocument;
+pub use self::layout::layout;
 
 use crate::{site::SiteMetadata, Error};
 use std::{
@@ -175,11 +175,16 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Error> {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
+pub struct RenderedData {
+    pub title: String,
+    pub content: String,
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedDocument {
     pub site_metadata: Arc<SiteMetadata>,
     pub metadata: Arc<DocumentMetadata>,
-    pub title: String,
-    pub content: String,
+    pub data: Arc<RenderedData>,
 }
 
 impl RenderedDocument {
@@ -200,8 +205,10 @@ impl RenderedDocument {
                 RenderedDocument {
                     site_metadata: site,
                     metadata: document,
-                    title: output.document.title,
-                    content: output.document.content,
+                    data: Arc::new(RenderedData {
+                        title: output.document.title,
+                        content: output.document.content,
+                    }),
                 }
             }
             DocumentType::Markdown => {
@@ -210,8 +217,10 @@ impl RenderedDocument {
                 RenderedDocument {
                     site_metadata: site,
                     metadata: document,
-                    title: output.title,
-                    content: output.content,
+                    data: Arc::new(RenderedData {
+                        title: output.title,
+                        content: output.content,
+                    }),
                 }
             }
         })

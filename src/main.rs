@@ -1,7 +1,6 @@
 mod document;
 mod file;
 mod site;
-mod store;
 mod command;
 mod error;
 mod sitemap;

@@ -1,5 +1,5 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument, LayoutedDocument},
+    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     sitemap::{Sitemap, LocalSitemap},
@@ -18,11 +18,15 @@ use std::ops::Deref;
 use super::{MetadatadWorkspace, MetadatadSite};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct RenderedWorkspace(pub HashMap<SiteName, RenderedSite>);
+pub struct RenderedWorkspace {
+    pub root_path: PathBuf,
+    pub sites: HashMap<SiteName, RenderedSite>,
+}
 
 impl RenderedWorkspace {
     pub fn new(metadata: &MetadatadWorkspace) -> Result<RenderedWorkspace, Error> {
-        let documents = metadata
+        let sites = metadata
+            .sites
             .par_iter()
             .map(|(name, site)| {
                 Ok((
@@ -32,15 +36,7 @@ impl RenderedWorkspace {
             })
             .collect::<Result<_, Error>>()?;
 
-        Ok(Self(documents))
-    }
-}
-
-impl Deref for RenderedWorkspace {
-    type Target = HashMap<SiteName, RenderedSite>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+        Ok(Self { sites, root_path: metadata.root_path.clone(), })
     }
 }
 

@@ -59,49 +59,36 @@ impl From<SitemapItem> for DocumentContextSitemapItem {
     }
 }
 
-#[derive(Eq, Clone, PartialEq, Debug)]
-pub struct LayoutedDocument {
-    pub site_metadata: Arc<SiteMetadata>,
-    pub metadata: Arc<DocumentMetadata>,
-    pub content: String,
-}
+pub fn layout(rendered: &RenderedDocument, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<String, Error> {
+    let site_config = &rendered.site_metadata.config;
 
-impl LayoutedDocument {
-    pub fn new(rendered: &RenderedDocument, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<LayoutedDocument, Error> {
-        let site_config = &rendered.site_metadata.config;
+    let context = DocumentContext {
+        site_title: site_config.title.clone(),
+        site_title_only: false,
+        site_base_url: site_config.base_url.clone(),
 
-        let context = DocumentContext {
-            site_title: site_config.title.clone(),
-            site_title_only: false,
-            site_base_url: site_config.base_url.clone(),
+        page_title: rendered.data.title.clone(),
+        page_description: None,
+        page_description_content: None,
+        page_url: format!("{}{}", rendered.site_metadata.config.url, rendered.metadata.name.folder_path().display()),
 
-            page_title: rendered.title.clone(),
-            page_description: None,
-            page_description_content: None,
-            page_url: format!("{}{}", rendered.site_metadata.config.url, rendered.metadata.name.folder_path().display()),
+        has_site_links: false,
+        site_links: Vec::new(),
 
-            has_site_links: false,
-            site_links: Vec::new(),
+        toc: None,
+        page_content: rendered.data.content.clone(),
 
-            toc: None,
-            page_content: rendered.content.clone(),
+        page_author_url: "https://social.that.world/@wei".to_string(),
+        page_author: "Wei Tang".to_string(),
+        page_copyright_years: "2019-2021".to_string(),
 
-            page_author_url: "https://social.that.world/@wei".to_string(),
-            page_author: "Wei Tang".to_string(),
-            page_copyright_years: "2019-2021".to_string(),
+        page_license: None,
+        page_license_code: None,
 
-            page_license: None,
-            page_license_code: None,
+        sitemap: sitemap.iter().map(|child| child.clone().into()).collect(),
+    };
 
-            sitemap: sitemap.iter().map(|child| child.clone().into()).collect(),
-        };
+    let layouted = handlebars.render("document/main", &context)?;
 
-        let layouted = handlebars.render("document/main", &context)?;
-
-        Ok(LayoutedDocument {
-            site_metadata: rendered.site_metadata.clone(),
-            metadata: rendered.metadata.clone(),
-            content: layouted,
-        })
-    }
+    Ok(layouted)
 }

@@ -1,5 +1,5 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument, LayoutedDocument},
+    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     sitemap::{Sitemap, LocalSitemap},
@@ -17,7 +17,10 @@ use handlebars::Handlebars;
 use std::ops::Deref;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct MetadatadWorkspace(pub HashMap<SiteName, MetadatadSite>);
+pub struct MetadatadWorkspace {
+    pub root_path: PathBuf,
+    pub sites: HashMap<SiteName, MetadatadSite>
+}
 
 impl MetadatadWorkspace {
     pub fn new(root_path: &Path) -> Result<Self, Error> {
@@ -45,15 +48,7 @@ impl MetadatadWorkspace {
             sites.insert(SiteName(site_name), item);
         }
 
-        Ok(Self(sites))
-    }
-}
-
-impl Deref for MetadatadWorkspace {
-    type Target = HashMap<SiteName, MetadatadSite>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.0
+        Ok(Self { sites, root_path: root_path.to_owned(), })
     }
 }
 
