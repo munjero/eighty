@@ -9,6 +9,7 @@ pub enum Error {
     Json(serde_json::Error),
     StripPrefix(std::path::StripPrefixError),
     WalkDir(walkdir::Error),
+    ReservedSiteName,
 
     TokioJoin(tokio::task::JoinError),
     SiteNotExist,

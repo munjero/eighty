@@ -4,8 +4,7 @@ use std::path::PathBuf;
 use crate::site::SiteName;
 use super::FullWorkspace;
 use std::ops::Deref;
-use std::sync::Arc;
-use crate::site::SiteMetadata;
+use std::path::Path;
 
 pub struct SimplePostWorkspace(pub HashMap<SiteName, SimplePostSite>);
 
@@ -29,10 +28,20 @@ impl SimplePostWorkspace {
             }
 
             sites.insert(site_name.clone(), SimplePostSite {
-                site: full_site.site.clone(),
+                base_url: full_site.site.config.base_url.clone(),
                 files: post_site
             });
         }
+
+        let mut spec_site_files = HashMap::new();
+        spec_site_files.insert(Path::new("index.html").to_owned(), full.spec_site.index_content.as_bytes().to_owned());
+        for (_, spec) in &full.spec_site.specs {
+            spec_site_files.insert(spec.path.clone(), spec.redirect_content.as_bytes().to_owned());
+        }
+        sites.insert(SiteName("specs".into()), SimplePostSite {
+            base_url: "/".to_string(),
+            files: spec_site_files,
+        });
 
         Ok(Self(sites))
     }
@@ -47,6 +56,6 @@ impl Deref for SimplePostWorkspace {
 }
 
 pub struct SimplePostSite {
-    pub site: Arc<SiteMetadata>,
+    pub base_url: String,
     pub files: HashMap<PathBuf, Vec<u8>>,
 }

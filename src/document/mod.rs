@@ -1,8 +1,5 @@
 mod asciidoc;
-mod layout;
 mod markdown;
-
-pub use self::layout::layout;
 
 use crate::{site::SiteMetadata, Error};
 use std::{
@@ -183,6 +180,7 @@ pub struct RenderedData {
     pub description_content: Option<String>,
     pub license: Option<String>,
     pub license_code: Option<String>,
+    pub specs: Vec<Spec>,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
@@ -216,6 +214,12 @@ impl RenderedDocument {
                         description_content: None,
                         license: output.document.license,
                         license_code: output.document.license_code,
+                        specs: output.specs.into_iter().map(|spec| Spec {
+                            id: spec.id,
+                            description: spec.description,
+                            discuss: spec.discuss,
+                            url: spec.url,
+                        }).collect(),
                     }),
                 }
             }
@@ -233,9 +237,18 @@ impl RenderedDocument {
                         description_content: Some(output.description_content),
                         license: None,
                         license_code: None,
+                        specs: Vec::new(),
                     }),
                 }
             }
         })
     }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct Spec {
+    pub id: String,
+    pub url: String,
+    pub description: String,
+    pub discuss: String,
 }

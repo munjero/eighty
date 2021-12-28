@@ -1,6 +1,6 @@
-use super::RenderedDocument;
 use crate::{
     sitemap::{Sitemap, SitemapItem},
+    document::RenderedDocument,
     Error,
 };
 use handlebars::Handlebars;
@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentContext {
+struct DocumentContext {
     pub site_title: String,
     pub site_title_only: bool,
     pub site_base_url: String,
@@ -36,14 +36,14 @@ pub struct DocumentContext {
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentContextSiteLink {
+struct DocumentContextSiteLink {
     pub url: String,
     pub name: String,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentContextSitemapItem {
+struct DocumentContextSitemapItem {
     pub title: String,
     pub path: String,
     pub children: Vec<DocumentContextSitemapItem>,

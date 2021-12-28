@@ -28,7 +28,7 @@ async fn handle(req: Request<Body>, context: Arc<RwLock<Context>>) -> Result<Res
         .ok_or(Error::SiteNotExist)?;
 
     let uri_path = Path::new(req.uri().path());
-    let rel_path = uri_path.strip_prefix(&site.site.config.base_url)?;
+    let rel_path = uri_path.strip_prefix(&site.base_url)?;
     let index_rel_path = rel_path.join("index.html");
 
     let content = site.files.get(&rel_path.to_owned()).map(|p| (rel_path, p))

@@ -1,10 +1,11 @@
 use crate::{
     asset::AssetStore,
-    document::{self, DocumentMetadata, DocumentName, RenderedData},
+    document::{DocumentMetadata, DocumentName, RenderedData, Spec},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     sitemap::{LocalSitemap, Sitemap},
     workspace::{RenderedSite, RenderedWorkspace},
+    layout,
     Error,
 };
 use handlebars::Handlebars;
@@ -14,6 +15,7 @@ pub struct FullWorkspace {
     pub root_path: PathBuf,
     pub assets: AssetStore,
     pub sites: HashMap<SiteName, FullSite>,
+    pub spec_site: FullSpecSite,
 }
 
 impl FullWorkspace {
@@ -24,12 +26,24 @@ impl FullWorkspace {
             .sites
             .iter()
             .map(|(name, site)| Ok((name.clone(), FullSite::new(&site, &assets.handlebars)?)))
-            .collect::<Result<_, Error>>()?;
+            .collect::<Result<HashMap<SiteName, FullSite>, Error>>()?;
+
+        let mut specs = Vec::new();
+        for (_, site) in &sites {
+            for (_, document) in &site.documents {
+                for spec in &document.rendered.specs {
+                    specs.push(spec.clone());
+                }
+            }
+        }
+
+        let spec_site = FullSpecSite::new(specs, &assets.handlebars)?;
 
         Ok(Self {
             root_path: rendered.root_path.clone(),
             assets,
             sites,
+            spec_site,
         })
     }
 }
@@ -61,7 +75,7 @@ impl FullSite {
                         site_metadata: v.site_metadata.clone(),
                         metadata: v.metadata.clone(),
                         rendered: v.data.clone(),
-                        content: document::layout(&v, &sitemap, handlebars)?,
+                        content: layout::document(&v, &sitemap, handlebars)?,
                         local_sitemap: sitemap.local(&k).ok_or(Error::DocumentNotFound)?,
                     },
                 ))
@@ -84,4 +98,59 @@ pub struct FullDocument {
     pub rendered: Arc<RenderedData>,
     pub content: String,
     pub local_sitemap: LocalSitemap,
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct FullSpecSite {
+    pub specs: HashMap<String, FullSpec>,
+    pub index_content: String,
+}
+
+impl FullSpecSite {
+    pub fn new(specs: Vec<Spec>, handlebars: &Handlebars) -> Result<Self, Error> {
+        let index_content = layout::spec_index(&specs, handlebars)?;
+        let mut full_specs = HashMap::new();
+
+        for spec in specs {
+            let full_spec = FullSpec::new(spec, handlebars)?;
+            full_specs.insert(full_spec.data.id.clone(), full_spec);
+        }
+
+        Ok(FullSpecSite {
+            specs: full_specs,
+            index_content,
+        })
+    }
+}
+
+#[derive(Eq, Clone, PartialEq, Debug)]
+pub struct FullSpec {
+    pub data: Spec,
+    pub redirect_content: String,
+    pub path: PathBuf,
+    pub folder_path: PathBuf,
+}
+
+impl FullSpec {
+    pub fn new(spec: Spec, handlebars: &Handlebars) -> Result<Self, Error> {
+        let redirect_content = layout::spec_redirect(&spec, handlebars)?;
+        let folder_path = {
+            let mut path = PathBuf::new();
+            path.push(spec.id.clone());
+            path
+        };
+        let path = {
+            let mut path = PathBuf::new();
+            path.push(spec.id.clone());
+            path.push("index.html");
+            path
+        };
+
+        Ok(FullSpec {
+            data: spec,
+            redirect_content,
+            path,
+            folder_path,
+        })
+    }
 }

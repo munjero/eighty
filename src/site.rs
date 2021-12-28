@@ -52,6 +52,10 @@ pub struct SiteMetadata {
 
 impl SiteMetadata {
     pub fn new(name: SiteName, path: &Path) -> Result<SiteMetadata, Error> {
+        if name.0 == "specs" {
+            return Err(Error::ReservedSiteName)
+        }
+
         let site_config_path = path.join("_site.json");
         let site_config = serde_json::from_reader(BufReader::new(File::open(site_config_path)?))?;
 
