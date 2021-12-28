@@ -52,6 +52,7 @@ pub struct FullSite {
     pub site: Arc<SiteMetadata>,
     pub documents: HashMap<DocumentName, FullDocument>,
     pub files: Arc<HashMap<PathBuf, FileMetadata>>,
+    pub xrefs: HashMap<PathBuf, DocumentName>,
     pub sitemap: Sitemap,
 }
 
@@ -80,12 +81,18 @@ impl FullSite {
                     },
                 ))
             })
-            .collect::<Result<_, Error>>()?;
+            .collect::<Result<HashMap<DocumentName, FullDocument>, Error>>()?;
+
+        let mut xrefs = HashMap::new();
+        for (name, document) in &full_documents {
+            xrefs.insert(document.metadata.source_path.clone(), name.clone());
+        }
 
         Ok(Self {
             site: rendered.site.clone(),
             documents: full_documents,
             files: rendered.files.clone(),
+            xrefs,
             sitemap,
         })
     }
