@@ -24,6 +24,9 @@ pub struct SiteConfig {
     pub base_url: String,
     pub author: String,
     pub email: String,
+    pub sitemap: SiteConfigSitemap,
+    #[serde(default)]
+    pub links: Vec<SiteConfigLink>,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
