@@ -1,19 +1,14 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName},
+    asset::AssetStore,
+    document::{self, DocumentMetadata, DocumentName, RenderedData},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
-    sitemap::{Sitemap, LocalSitemap},
+    sitemap::{LocalSitemap, Sitemap},
+    workspace::{RenderedSite, RenderedWorkspace},
     Error,
 };
-use std::{
-    collections::HashMap,
-    path::{PathBuf},
-    sync::Arc,
-};
 use handlebars::Handlebars;
-use crate::workspace::{RenderedWorkspace, RenderedSite};
-use crate::asset::AssetStore;
-use crate::document::{self, RenderedData};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 pub struct FullWorkspace {
     pub root_path: PathBuf,
@@ -28,12 +23,7 @@ impl FullWorkspace {
         let sites = rendered
             .sites
             .iter()
-            .map(|(name, site)| {
-                Ok((
-                    name.clone(),
-                    FullSite::new(&site, &assets.handlebars)?,
-                ))
-            })
+            .map(|(name, site)| Ok((name.clone(), FullSite::new(&site, &assets.handlebars)?)))
             .collect::<Result<_, Error>>()?;
 
         Ok(Self {
@@ -65,13 +55,16 @@ impl FullSite {
             .documents
             .iter()
             .map(|(k, v)| {
-                Ok((k.clone(), FullDocument {
-                    site_metadata: v.site_metadata.clone(),
-                    metadata: v.metadata.clone(),
-                    rendered: v.data.clone(),
-                    layouted: document::layout(&v, &sitemap, handlebars)?,
-                    local_sitemap: sitemap.local(&k).ok_or(Error::DocumentNotFound)?,
-                }))
+                Ok((
+                    k.clone(),
+                    FullDocument {
+                        site_metadata: v.site_metadata.clone(),
+                        metadata: v.metadata.clone(),
+                        rendered: v.data.clone(),
+                        layouted: document::layout(&v, &sitemap, handlebars)?,
+                        local_sitemap: sitemap.local(&k).ok_or(Error::DocumentNotFound)?,
+                    },
+                ))
             })
             .collect::<Result<_, Error>>()?;
 

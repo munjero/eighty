@@ -1,10 +1,13 @@
-use std::{path::Path, sync::Arc};
-use crate::Error;
-use std::net::SocketAddr;
-use hyper::{Body, Request, Response, Server};
-use hyper::service::{make_service_fn, service_fn};
-use crate::workspace::{MetadatadWorkspace, RenderedWorkspace, FullWorkspace};
-use crate::site::SiteName;
+use crate::{
+    site::SiteName,
+    workspace::{FullWorkspace, MetadatadWorkspace, RenderedWorkspace},
+    Error,
+};
+use hyper::{
+    service::{make_service_fn, service_fn},
+    Body, Request, Response, Server,
+};
+use std::{net::SocketAddr, path::Path, sync::Arc};
 
 pub struct Context {
     pub metadatad: MetadatadWorkspace,
@@ -14,25 +17,35 @@ pub struct Context {
 }
 
 async fn handle(req: Request<Body>, context: Arc<Context>) -> Result<Response<Body>, Error> {
-    let site = context.workspace.sites.get(&context.site_name).ok_or(Error::SiteNotExist)?;
+    let site = context
+        .workspace
+        .sites
+        .get(&context.site_name)
+        .ok_or(Error::SiteNotExist)?;
 
     let uri_path = Path::new(req.uri().path());
     let rel_path = uri_path.strip_prefix(&site.site.config.base_url)?;
 
-    if let Some(document_name) = site.documents.keys().find(|item| item.is_matched(&rel_path)) {
-        let document = site.documents.get(&document_name).ok_or(Error::DocumentNotFound)?;
+    if let Some(document_name) = site
+        .documents
+        .keys()
+        .find(|item| item.is_matched(&rel_path))
+    {
+        let document = site
+            .documents
+            .get(&document_name)
+            .ok_or(Error::DocumentNotFound)?;
 
         return Ok(Response::builder()
-                  .header("Content-Type", "text/html")
-                  .body(document.layouted.clone().into())?)
+            .header("Content-Type", "text/html")
+            .body(document.layouted.clone().into())?);
     }
 
     if let Some(asset_content) = context.workspace.assets.assets.get(rel_path) {
-        return Ok(Response::builder()
-                  .body(asset_content.clone().into())?)
+        return Ok(Response::builder().body(asset_content.clone().into())?);
     }
 
-    return Err(Error::DocumentNotFound)
+    return Err(Error::DocumentNotFound);
 }
 
 #[tokio::main]
@@ -44,9 +57,7 @@ pub async fn serve(root_path: &Path, site_name: &str) -> Result<(), Error> {
     let make_svc = make_service_fn(move |_conn| {
         let context = context.clone();
 
-        async move {
-            Ok::<_, Error>(service_fn(move |req| handle(req, context.clone())))
-        }
+        async move { Ok::<_, Error>(service_fn(move |req| handle(req, context.clone()))) }
     });
 
     let server = Server::bind(&addr).serve(make_svc);
@@ -75,7 +86,8 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
         };
 
         Ok(context)
-    }).await??;
+    })
+    .await??;
 
     Ok(context)
 }

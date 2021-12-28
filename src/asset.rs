@@ -1,13 +1,11 @@
-use crate::{
-    Error,
-};
+use crate::Error;
+use handlebars::Handlebars;
 use std::{
     collections::HashMap,
     fs,
     path::{Path, PathBuf},
 };
 use walkdir::WalkDir;
-use handlebars::Handlebars;
 
 #[derive(Clone, Debug)]
 pub struct AssetStore {
@@ -42,6 +40,6 @@ impl AssetStore {
         handlebars.set_strict_mode(true);
         handlebars.register_templates_directory(".hbs", asset_path.join("layouts"))?;
 
-        Ok(AssetStore { assets, handlebars, })
+        Ok(AssetStore { assets, handlebars })
     }
 }

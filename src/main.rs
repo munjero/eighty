@@ -1,16 +1,16 @@
+mod asset;
+mod command;
 mod document;
+mod error;
 mod file;
 mod site;
-mod command;
-mod error;
 mod sitemap;
 mod workspace;
-mod asset;
 
 pub use crate::error::Error;
 
 use clap::{App, Arg, SubCommand};
-use std::{path::Path};
+use std::path::Path;
 
 fn main() -> Result<(), Error> {
     let matches = App::new("Eighty")
@@ -20,7 +20,7 @@ fn main() -> Result<(), Error> {
         .subcommand(
             SubCommand::with_name("serve")
                 .arg(Arg::with_name("root").index(1).required(true))
-                .arg(Arg::with_name("site").index(2).required(true))
+                .arg(Arg::with_name("site").index(2).required(true)),
         )
         .get_matches();
 

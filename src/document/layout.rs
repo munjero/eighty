@@ -1,8 +1,10 @@
-use serde::{Deserialize, Serialize};
-use super::{RenderedDocument};
+use super::RenderedDocument;
+use crate::{
+    sitemap::{Sitemap, SitemapItem},
+    Error,
+};
 use handlebars::Handlebars;
-use crate::Error;
-use crate::sitemap::{Sitemap, SitemapItem};
+use serde::{Deserialize, Serialize};
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -52,12 +54,20 @@ impl From<SitemapItem> for DocumentContextSitemapItem {
         Self {
             title: item.title,
             path: format!("{}", item.document_name.folder_path().display()),
-            children: item.children.iter().map(|child| child.clone().into()).collect(),
+            children: item
+                .children
+                .iter()
+                .map(|child| child.clone().into())
+                .collect(),
         }
     }
 }
 
-pub fn layout(rendered: &RenderedDocument, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<String, Error> {
+pub fn layout(
+    rendered: &RenderedDocument,
+    sitemap: &Sitemap,
+    handlebars: &Handlebars,
+) -> Result<String, Error> {
     let site_config = &rendered.site_metadata.config;
 
     let context = DocumentContext {
@@ -68,7 +78,11 @@ pub fn layout(rendered: &RenderedDocument, sitemap: &Sitemap, handlebars: &Handl
         page_title: rendered.data.title.clone(),
         page_description: None,
         page_description_content: None,
-        page_url: format!("{}{}", rendered.site_metadata.config.url, rendered.metadata.name.folder_path().display()),
+        page_url: format!(
+            "{}{}",
+            rendered.site_metadata.config.url,
+            rendered.metadata.name.folder_path().display()
+        ),
 
         has_site_links: false,
         site_links: Vec::new(),

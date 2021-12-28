@@ -1,6 +1,6 @@
 mod asciidoc;
-mod markdown;
 mod layout;
+mod markdown;
 
 pub use self::layout::layout;
 
@@ -63,22 +63,22 @@ impl DocumentName {
 
     pub fn is_ancestor_of(&self, child: &Self) -> bool {
         if self.post.is_some() {
-            return false
+            return false;
         }
 
         if self.labels.len() > child.labels.len() {
-            return false
+            return false;
         }
 
         if self.labels[0..self.labels.len()] != child.labels[0..self.labels.len()] {
-            return false
+            return false;
         }
 
         if self.labels.len() == child.labels.len() {
-            return self.post.is_none() && child.post.is_some()
+            return self.post.is_none() && child.post.is_some();
         }
 
-        return true
+        return true;
     }
 
     pub fn is_root(&self) -> bool {
@@ -188,15 +188,13 @@ pub struct RenderedDocument {
 }
 
 impl RenderedDocument {
-    pub fn new(site: Arc<SiteMetadata>, document: Arc<DocumentMetadata>) -> Result<RenderedDocument, Error> {
-        println!(
-            "[{}] Rendering document {} ...",
-            site.name, document.name
-        );
+    pub fn new(
+        site: Arc<SiteMetadata>,
+        document: Arc<DocumentMetadata>,
+    ) -> Result<RenderedDocument, Error> {
+        println!("[{}] Rendering document {} ...", site.name, document.name);
 
-        let rel_file_path = document
-            .source_path
-            .strip_prefix(&site.path)?;
+        let rel_file_path = document.source_path.strip_prefix(&site.path)?;
 
         Ok(match document.typ {
             DocumentType::AsciiDoc => {

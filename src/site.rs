@@ -1,3 +1,4 @@
+use crate::Error;
 use serde::{Deserialize, Serialize};
 use std::{
     fmt,
@@ -5,7 +6,6 @@ use std::{
     io::BufReader,
     path::{Path, PathBuf},
 };
-use crate::Error;
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug, PartialOrd, Ord)]
 pub struct SiteName(pub String);

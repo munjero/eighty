@@ -15,7 +15,7 @@ use walkdir::WalkDir;
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct MetadatadWorkspace {
     pub root_path: PathBuf,
-    pub sites: HashMap<SiteName, MetadatadSite>
+    pub sites: HashMap<SiteName, MetadatadSite>,
 }
 
 impl MetadatadWorkspace {
@@ -44,7 +44,10 @@ impl MetadatadWorkspace {
             sites.insert(SiteName(site_name), item);
         }
 
-        Ok(Self { sites, root_path: root_path.to_owned(), })
+        Ok(Self {
+            sites,
+            root_path: root_path.to_owned(),
+        })
     }
 }
 
@@ -56,9 +59,7 @@ pub struct MetadatadSite {
 }
 
 impl MetadatadSite {
-    pub fn new(
-        site: Arc<SiteMetadata>,
-    ) -> Result<Self, Error> {
+    pub fn new(site: Arc<SiteMetadata>) -> Result<Self, Error> {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
@@ -97,8 +98,7 @@ impl MetadatadSite {
                 };
 
                 if let Some(typ) = typ {
-                    let document =
-                        DocumentMetadata::new(&site, entry.path(), typ, modified)?;
+                    let document = DocumentMetadata::new(&site, entry.path(), typ, modified)?;
                     documents.insert(document.name.clone(), Arc::new(document));
                 } else {
                     let rel_file_path = entry.path().strip_prefix(&site.path)?;

@@ -1,6 +1,5 @@
 use crate::document::DocumentName;
-use std::fmt;
-use std::ops::Deref;
+use std::{fmt, ops::Deref};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct LocalSitemap {
@@ -40,12 +39,16 @@ impl SitemapItem {
             for child in &mut self.children {
                 if child.maybe_insert(document_name.clone(), title.clone()) {
                     inserted = true;
-                    break
+                    break;
                 }
             }
 
             if !inserted {
-                self.children.push(SitemapItem { title, document_name, children: Vec::new() });
+                self.children.push(SitemapItem {
+                    title,
+                    document_name,
+                    children: Vec::new(),
+                });
             }
 
             true
@@ -65,12 +68,16 @@ impl Sitemap {
         for child in &mut self.0 {
             if child.maybe_insert(document_name.clone(), title.clone()) {
                 inserted = true;
-                break
+                break;
             }
         }
 
         if !inserted {
-            self.0.push(SitemapItem { title, document_name, children: Vec::new() });
+            self.0.push(SitemapItem {
+                title,
+                document_name,
+                children: Vec::new(),
+            });
         }
     }
 
@@ -78,10 +85,14 @@ impl Sitemap {
         if document_name.is_root() {
             return Some(LocalSitemap {
                 breadcrumb: Breadcrumb(Vec::new()),
-                children: self.0.iter().map(|item| BreadcrumbItem {
-                    title: item.title.clone(),
-                    document_name: item.document_name.clone(),
-                }).collect(),
+                children: self
+                    .0
+                    .iter()
+                    .map(|item| BreadcrumbItem {
+                        title: item.title.clone(),
+                        document_name: item.document_name.clone(),
+                    })
+                    .collect(),
             });
         }
 
@@ -90,17 +101,22 @@ impl Sitemap {
 
         loop {
             let target = current.iter().find(|item| {
-                item.document_name.is_ancestor_of(&document_name) || item.document_name == *document_name
+                item.document_name.is_ancestor_of(&document_name)
+                    || item.document_name == *document_name
             });
 
             if let Some(target) = target {
                 if target.document_name == *document_name {
                     return Some(LocalSitemap {
                         breadcrumb: Breadcrumb(breadcrumb),
-                        children: target.children.iter().map(|item| BreadcrumbItem {
-                            title: item.title.clone(),
-                            document_name: item.document_name.clone(),
-                        }).collect(),
+                        children: target
+                            .children
+                            .iter()
+                            .map(|item| BreadcrumbItem {
+                                title: item.title.clone(),
+                                document_name: item.document_name.clone(),
+                            })
+                            .collect(),
                     });
                 } else {
                     breadcrumb.push(BreadcrumbItem {
@@ -111,7 +127,7 @@ impl Sitemap {
                     current = &target.children;
                 }
             } else {
-                return None
+                return None;
             }
         }
     }

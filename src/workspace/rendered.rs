@@ -1,3 +1,4 @@
+use super::{MetadatadSite, MetadatadWorkspace};
 use crate::{
     document::{DocumentName, RenderedDocument},
     file::FileMetadata,
@@ -5,12 +6,7 @@ use crate::{
     Error,
 };
 use rayon::prelude::*;
-use std::{
-    collections::HashMap,
-    path::{PathBuf},
-    sync::Arc,
-};
-use super::{MetadatadWorkspace, MetadatadSite};
+use std::{collections::HashMap, path::PathBuf, sync::Arc};
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedWorkspace {
@@ -23,15 +19,13 @@ impl RenderedWorkspace {
         let sites = metadata
             .sites
             .par_iter()
-            .map(|(name, site)| {
-                Ok((
-                    name.clone(),
-                    RenderedSite::new(&site)?,
-                ))
-            })
+            .map(|(name, site)| Ok((name.clone(), RenderedSite::new(&site)?)))
             .collect::<Result<_, Error>>()?;
 
-        Ok(Self { sites, root_path: metadata.root_path.clone(), })
+        Ok(Self {
+            sites,
+            root_path: metadata.root_path.clone(),
+        })
     }
 }
 
