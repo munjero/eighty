@@ -8,5 +8,6 @@
 /tmp/
 /build/
 /sites/*/
+/dist/
 target
 result
