@@ -107,7 +107,7 @@ impl MetadatadSite {
 
                 if let Some(typ) = typ {
                     let document =
-                        DocumentMetadata::new(site.clone(), entry.path(), typ, modified)?;
+                        DocumentMetadata::new(&site, entry.path(), typ, modified)?;
                     documents.insert(document.name.clone(), Arc::new(document));
                 } else {
                     let rel_file_path = entry.path().strip_prefix(&site.path)?;

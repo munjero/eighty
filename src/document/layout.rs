@@ -66,7 +66,7 @@ pub struct LayoutedDocument {
 
 impl LayoutedDocument {
     pub fn new(rendered: Arc<RenderedDocument>, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<LayoutedDocument, Error> {
-        let site_config = &rendered.metadata.site.config;
+        let site_config = &rendered.site_metadata.config;
 
         let context = DocumentContext {
             site_title: site_config.title.clone(),
@@ -76,7 +76,7 @@ impl LayoutedDocument {
             page_title: rendered.title.clone(),
             page_description: None,
             page_description_content: None,
-            page_url: rendered.metadata.url(),
+            page_url: format!("{}{}", rendered.site_metadata.config.url, rendered.metadata.name.folder_path().display()),
 
             has_site_links: false,
             site_links: Vec::new(),

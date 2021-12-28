@@ -52,7 +52,7 @@ impl RenderedStoreItem {
             .map(|(name, document)| {
                 Ok((
                     name.clone(),
-                    Arc::new(RenderedDocument::new(document.clone())?),
+                    Arc::new(RenderedDocument::new(metadata.site.clone(), document.clone())?),
                 ))
             })
             .collect::<Result<_, Error>>()?;

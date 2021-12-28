@@ -100,7 +100,6 @@ pub enum DocumentType {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct DocumentMetadata {
-    pub site: Arc<SiteMetadata>,
     pub name: DocumentName,
     pub typ: DocumentType,
     pub modified: SystemTime,
@@ -109,7 +108,7 @@ pub struct DocumentMetadata {
 
 impl DocumentMetadata {
     pub fn new(
-        site: Arc<SiteMetadata>,
+        site: &SiteMetadata,
         file_path: &Path,
         typ: DocumentType,
         modified: SystemTime,
@@ -118,16 +117,11 @@ impl DocumentMetadata {
         let name = derive_name(&rel_file_path)?;
 
         Ok(DocumentMetadata {
-            site,
             name,
             source_path: file_path.to_owned(),
             modified,
             typ,
         })
-    }
-
-    pub fn url(&self) -> String {
-        format!("{}{:?}", self.site.config.url, self.name.folder_path())
     }
 }
 
@@ -182,36 +176,39 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Error> {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedDocument {
+    pub site_metadata: Arc<SiteMetadata>,
     pub metadata: Arc<DocumentMetadata>,
     pub title: String,
     pub content: String,
 }
 
 impl RenderedDocument {
-    pub fn new(document: Arc<DocumentMetadata>) -> Result<RenderedDocument, Error> {
+    pub fn new(site: Arc<SiteMetadata>, document: Arc<DocumentMetadata>) -> Result<RenderedDocument, Error> {
         println!(
             "[{}] Rendering document {} ...",
-            document.site.name, document.name
+            site.name, document.name
         );
 
         let rel_file_path = document
             .source_path
-            .strip_prefix(&document.site.path)?;
+            .strip_prefix(&site.path)?;
 
         Ok(match document.typ {
             DocumentType::AsciiDoc => {
-                let output = self::asciidoc::process_asciidoc(&document.site.path, &rel_file_path)?;
+                let output = self::asciidoc::process_asciidoc(&site.path, &rel_file_path)?;
 
                 RenderedDocument {
+                    site_metadata: site,
                     metadata: document,
                     title: output.document.title,
                     content: output.document.content,
                 }
             }
             DocumentType::Markdown => {
-                let output = self::markdown::process_markdown(&document.site.path, &rel_file_path)?;
+                let output = self::markdown::process_markdown(&site.path, &rel_file_path)?;
 
                 RenderedDocument {
+                    site_metadata: site,
                     metadata: document,
                     title: output.title,
                     content: output.content,
