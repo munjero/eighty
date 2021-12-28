@@ -1,4 +1,4 @@
-use crate::{
+use eighty::{
     workspace::{MetadatadWorkspace, RenderedWorkspace},
     Error,
 };

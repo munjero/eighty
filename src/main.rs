@@ -1,16 +1,8 @@
-mod asset;
 mod command;
-mod document;
-mod error;
-mod file;
-mod site;
-mod sitemap;
-mod workspace;
-
-pub use crate::error::Error;
 
 use clap::{App, Arg, SubCommand};
 use std::path::Path;
+use eighty::Error;
 
 fn main() -> Result<(), Error> {
     let matches = App::new("Eighty")

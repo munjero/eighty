@@ -1,4 +1,4 @@
-use crate::{
+use eighty::{
     site::SiteName,
     workspace::{FullWorkspace, MetadatadWorkspace, RenderedWorkspace, SimplePostWorkspace},
     Error,
