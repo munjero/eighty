@@ -91,7 +91,7 @@ impl LayoutedDocument {
             page_license: None,
             page_license_code: None,
 
-            sitemap: sitemap.items.iter().map(|child| child.clone().into()).collect(),
+            sitemap: sitemap.iter().map(|child| child.clone().into()).collect(),
         };
 
         let layouted = handlebars.render("document/main", &context)?;

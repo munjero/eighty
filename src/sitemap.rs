@@ -1,5 +1,6 @@
 use crate::document::DocumentName;
 use std::fmt;
+use std::ops::Deref;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct LocalSitemap {
@@ -8,8 +9,14 @@ pub struct LocalSitemap {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Breadcrumb {
-    pub items: Vec<BreadcrumbItem>
+pub struct Breadcrumb(pub Vec<BreadcrumbItem>);
+
+impl Deref for Breadcrumb {
+    type Target = Vec<BreadcrumbItem>;
+
+    fn deref(&self) -> &Vec<BreadcrumbItem> {
+        &self.0
+    }
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
@@ -49,15 +56,13 @@ impl SitemapItem {
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct Sitemap {
-    pub items: Vec<SitemapItem>,
-}
+pub struct Sitemap(pub Vec<SitemapItem>);
 
 impl Sitemap {
     pub fn insert(&mut self, document_name: DocumentName, title: String) {
         let mut inserted = false;
 
-        for child in &mut self.items {
+        for child in &mut self.0 {
             if child.maybe_insert(document_name.clone(), title.clone()) {
                 inserted = true;
                 break
@@ -65,15 +70,15 @@ impl Sitemap {
         }
 
         if !inserted {
-            self.items.push(SitemapItem { title, document_name, children: Vec::new() });
+            self.0.push(SitemapItem { title, document_name, children: Vec::new() });
         }
     }
 
     pub fn local(&self, document_name: &DocumentName) -> Option<LocalSitemap> {
         if document_name.is_root() {
             return Some(LocalSitemap {
-                breadcrumb: Breadcrumb { items: Vec::new() },
-                children: self.items.iter().map(|item| BreadcrumbItem {
+                breadcrumb: Breadcrumb(Vec::new()),
+                children: self.0.iter().map(|item| BreadcrumbItem {
                     title: item.title.clone(),
                     document_name: item.document_name.clone(),
                 }).collect(),
@@ -81,7 +86,7 @@ impl Sitemap {
         }
 
         let mut breadcrumb = Vec::new();
-        let mut current = &self.items;
+        let mut current = &self.0;
 
         loop {
             let target = current.iter().find(|item| {
@@ -91,7 +96,7 @@ impl Sitemap {
             if let Some(target) = target {
                 if target.document_name == *document_name {
                     return Some(LocalSitemap {
-                        breadcrumb: Breadcrumb { items: breadcrumb },
+                        breadcrumb: Breadcrumb(breadcrumb),
                         children: target.children.iter().map(|item| BreadcrumbItem {
                             title: item.title.clone(),
                             document_name: item.document_name.clone(),
@@ -117,7 +122,7 @@ impl From<Vec<(DocumentName, String)>> for Sitemap {
         name_titles.sort_by_key(|(k, _)| k.clone());
         let ordered_name_titles = name_titles;
 
-        let mut sitemap = Sitemap { items: Vec::new() };
+        let mut sitemap = Sitemap(Vec::new());
         for (name, title) in &ordered_name_titles {
             if !name.is_root() {
                 sitemap.insert(name.clone(), title.clone());
@@ -128,9 +133,17 @@ impl From<Vec<(DocumentName, String)>> for Sitemap {
     }
 }
 
+impl Deref for Sitemap {
+    type Target = Vec<SitemapItem>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
 impl fmt::Display for Sitemap {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        for child in &self.items {
+        for child in &self.0 {
             fmt_sitemap_item(f, child, "")?;
         }
 
