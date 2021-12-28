@@ -63,7 +63,7 @@ impl MetadatadSite {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
-        let walker = WalkDir::new(&site.path).into_iter().filter_entry(|entry| {
+        let walker = WalkDir::new(&site.source_path).into_iter().filter_entry(|entry| {
             if let Some(file_name) = entry.file_name().to_str() {
                 if file_name == "_posts" && entry.file_type().is_dir() {
                     return true;
@@ -101,7 +101,7 @@ impl MetadatadSite {
                     let document = DocumentMetadata::new(&site, entry.path(), typ, modified)?;
                     documents.insert(document.name.clone(), Arc::new(document));
                 } else {
-                    let rel_file_path = entry.path().strip_prefix(&site.path)?;
+                    let rel_file_path = entry.path().strip_prefix(&site.source_path)?;
                     let content = fs::read(entry.path())?;
 
                     let file = FileMetadata {

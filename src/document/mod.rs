@@ -113,7 +113,7 @@ impl DocumentMetadata {
         typ: DocumentType,
         modified: SystemTime,
     ) -> Result<DocumentMetadata, Error> {
-        let rel_file_path = file_path.strip_prefix(&site.path)?;
+        let rel_file_path = file_path.strip_prefix(&site.source_path)?;
         let name = derive_name(&rel_file_path)?;
 
         Ok(DocumentMetadata {
@@ -194,11 +194,11 @@ impl RenderedDocument {
     ) -> Result<RenderedDocument, Error> {
         println!("[{}] Rendering document {} ...", site.name, document.name);
 
-        let rel_file_path = document.source_path.strip_prefix(&site.path)?;
+        let rel_file_path = document.source_path.strip_prefix(&site.source_path)?;
 
         Ok(match document.typ {
             DocumentType::AsciiDoc => {
-                let output = self::asciidoc::process_asciidoc(&site.path, &rel_file_path)?;
+                let output = self::asciidoc::process_asciidoc(&site.source_path, &rel_file_path)?;
 
                 RenderedDocument {
                     site_metadata: site,
@@ -210,7 +210,7 @@ impl RenderedDocument {
                 }
             }
             DocumentType::Markdown => {
-                let output = self::markdown::process_markdown(&site.path, &rel_file_path)?;
+                let output = self::markdown::process_markdown(&site.source_path, &rel_file_path)?;
 
                 RenderedDocument {
                     site_metadata: site,

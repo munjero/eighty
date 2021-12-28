@@ -43,7 +43,7 @@ pub struct SiteConfigSitemap {
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct SiteMetadata {
     pub name: SiteName,
-    pub path: PathBuf,
+    pub source_path: PathBuf,
     pub config: SiteConfig,
 }
 
@@ -54,7 +54,7 @@ impl SiteMetadata {
 
         let site = SiteMetadata {
             name: name.clone(),
-            path: path.to_owned(),
+            source_path: path.to_owned(),
             config: site_config,
         };
 
