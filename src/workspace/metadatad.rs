@@ -17,7 +17,7 @@ use handlebars::Handlebars;
 use std::ops::Deref;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
-pub struct MetadatadWorkspace(pub HashMap<SiteName, Arc<MetadatadSite>>);
+pub struct MetadatadWorkspace(pub HashMap<SiteName, MetadatadSite>);
 
 impl MetadatadWorkspace {
     pub fn new(root_path: &Path) -> Result<Self, Error> {
@@ -40,7 +40,7 @@ impl MetadatadWorkspace {
                 SiteName(site_name.clone()),
                 &site_folder.path(),
             )?);
-            let item = Arc::new(MetadatadSite::new(site.clone())?);
+            let item = MetadatadSite::new(site.clone())?;
 
             sites.insert(SiteName(site_name), item);
         }
@@ -50,7 +50,7 @@ impl MetadatadWorkspace {
 }
 
 impl Deref for MetadatadWorkspace {
-    type Target = HashMap<SiteName, Arc<MetadatadSite>>;
+    type Target = HashMap<SiteName, MetadatadSite>;
 
     fn deref(&self) -> &Self::Target {
         &self.0

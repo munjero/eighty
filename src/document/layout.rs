@@ -4,6 +4,7 @@ use super::{DocumentMetadata, RenderedDocument};
 use handlebars::Handlebars;
 use crate::Error;
 use crate::sitemap::{Sitemap, SitemapItem};
+use crate::site::SiteMetadata;
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -60,12 +61,13 @@ impl From<SitemapItem> for DocumentContextSitemapItem {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct LayoutedDocument {
+    pub site_metadata: Arc<SiteMetadata>,
     pub metadata: Arc<DocumentMetadata>,
     pub content: String,
 }
 
 impl LayoutedDocument {
-    pub fn new(rendered: Arc<RenderedDocument>, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<LayoutedDocument, Error> {
+    pub fn new(rendered: &RenderedDocument, sitemap: &Sitemap, handlebars: &Handlebars) -> Result<LayoutedDocument, Error> {
         let site_config = &rendered.site_metadata.config;
 
         let context = DocumentContext {
@@ -97,6 +99,7 @@ impl LayoutedDocument {
         let layouted = handlebars.render("document/main", &context)?;
 
         Ok(LayoutedDocument {
+            site_metadata: rendered.site_metadata.clone(),
             metadata: rendered.metadata.clone(),
             content: layouted,
         })
