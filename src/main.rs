@@ -5,6 +5,7 @@ mod store;
 mod command;
 mod error;
 mod sitemap;
+mod workspace;
 
 pub use crate::error::Error;
 

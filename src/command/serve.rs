@@ -3,11 +3,12 @@ use crate::Error;
 use std::net::SocketAddr;
 use hyper::{Body, Request, Response, Server};
 use hyper::service::{make_service_fn, service_fn};
-use crate::store::{RenderedStore, SiteMetadataStore, AssetStore, LayoutedStore, SitemapStore};
+use crate::store::{RenderedStore, AssetStore, LayoutedStore, SitemapStore};
+use crate::workspace::MetadatadWorkspace;
 use crate::site::SiteName;
 
 pub struct Context {
-    pub metadata: Arc<SiteMetadataStore>,
+    pub metadata: Arc<MetadatadWorkspace>,
     pub rendered: Arc<RenderedStore>,
     pub assets: Arc<AssetStore>,
     pub layouted: Arc<LayoutedStore>,
@@ -16,7 +17,7 @@ pub struct Context {
 }
 
 async fn handle(req: Request<Body>, context: Arc<Context>) -> Result<Response<Body>, Error> {
-    let site = context.metadata.sites.get(&context.site_name).ok_or(Error::SiteNotExist)?;
+    let site = context.metadata.get(&context.site_name).ok_or(Error::SiteNotExist)?;
     let layouted = context.layouted.documents.get(&context.site_name).ok_or(Error::SiteNotExist)?;
 
     let uri_path = Path::new(req.uri().path());
@@ -66,7 +67,7 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
     let root_path = root_path.to_owned();
 
     let context = tokio::task::spawn_blocking(move || -> Result<_, Error> {
-        let site_metadata_store = Arc::new(SiteMetadataStore::new(&root_path)?);
+        let site_metadata_store = Arc::new(MetadatadWorkspace::new(&root_path)?);
         let rendered_store = Arc::new(RenderedStore::new(site_metadata_store.clone())?);
         let asset_store = Arc::new(AssetStore::new(&root_path)?);
         let sitemap_store = Arc::new(SitemapStore::new(rendered_store.clone())?);
