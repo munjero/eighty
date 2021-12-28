@@ -61,7 +61,7 @@ impl FullSite {
                         site_metadata: v.site_metadata.clone(),
                         metadata: v.metadata.clone(),
                         rendered: v.data.clone(),
-                        layouted: document::layout(&v, &sitemap, handlebars)?,
+                        content: document::layout(&v, &sitemap, handlebars)?,
                         local_sitemap: sitemap.local(&k).ok_or(Error::DocumentNotFound)?,
                     },
                 ))
@@ -82,6 +82,6 @@ pub struct FullDocument {
     pub site_metadata: Arc<SiteMetadata>,
     pub metadata: Arc<DocumentMetadata>,
     pub rendered: Arc<RenderedData>,
-    pub layouted: String,
+    pub content: String,
     pub local_sitemap: LocalSitemap,
 }

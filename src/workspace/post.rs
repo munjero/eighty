@@ -25,7 +25,7 @@ impl SimplePostWorkspace {
             }
 
             for (document_name, document) in &full_site.documents {
-                post_site.insert(document_name.path(), document.layouted.as_bytes().to_owned());
+                post_site.insert(document_name.path(), document.content.as_bytes().to_owned());
             }
 
             sites.insert(site_name.clone(), SimplePostSite {
