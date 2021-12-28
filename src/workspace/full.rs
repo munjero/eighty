@@ -28,11 +28,19 @@ impl FullWorkspace {
             .map(|(name, site)| Ok((name.clone(), FullSite::new(&site, &assets.handlebars)?)))
             .collect::<Result<HashMap<SiteName, FullSite>, Error>>()?;
 
-        let mut specs = Vec::new();
+        let mut specs = HashMap::new();
         for (_, site) in &sites {
             for (_, document) in &site.documents {
                 for spec in &document.rendered.specs {
-                    specs.push(spec.clone());
+                    let site_url = site.site.config.url.clone();
+                    let redirect_url = format!("{}{}/", site_url, document.metadata.name.folder_path().display());
+                    let redirect_content = layout::spec_redirect(&spec, &redirect_url, &assets.handlebars)?;
+
+                    specs.insert(spec.id.clone(), FullSpec {
+                        redirect_content,
+                        redirect_url,
+                        data: spec.clone(),
+                    });
                 }
             }
         }
@@ -114,17 +122,17 @@ pub struct FullSpecSite {
 }
 
 impl FullSpecSite {
-    pub fn new(specs: Vec<Spec>, handlebars: &Handlebars) -> Result<Self, Error> {
-        let index_content = layout::spec_index(&specs, handlebars)?;
-        let mut full_specs = HashMap::new();
+    pub fn new(specs: HashMap<String, FullSpec>, handlebars: &Handlebars) -> Result<Self, Error> {
+        let sorted_specs = {
+            let mut specs = specs.values().map(|v| (v.data.clone(), v.redirect_url.clone())).collect::<Vec<_>>();
+            specs.sort_by_key(|v| v.0.id.clone());
+            specs
+        };
 
-        for spec in specs {
-            let full_spec = FullSpec::new(spec, handlebars)?;
-            full_specs.insert(full_spec.data.id.clone(), full_spec);
-        }
+        let index_content = layout::spec_index(&sorted_specs, handlebars)?;
 
         Ok(FullSpecSite {
-            specs: full_specs,
+            specs,
             index_content,
         })
     }
@@ -134,30 +142,20 @@ impl FullSpecSite {
 pub struct FullSpec {
     pub data: Spec,
     pub redirect_content: String,
-    pub path: PathBuf,
-    pub folder_path: PathBuf,
+    pub redirect_url: String,
 }
 
 impl FullSpec {
-    pub fn new(spec: Spec, handlebars: &Handlebars) -> Result<Self, Error> {
-        let redirect_content = layout::spec_redirect(&spec, handlebars)?;
-        let folder_path = {
-            let mut path = PathBuf::new();
-            path.push(spec.id.clone());
-            path
-        };
-        let path = {
-            let mut path = PathBuf::new();
-            path.push(spec.id.clone());
-            path.push("index.html");
-            path
-        };
+    pub fn folder_path(&self) -> PathBuf {
+        let mut path = PathBuf::new();
+        path.push(self.data.id.clone());
+        path
+    }
 
-        Ok(FullSpec {
-            data: spec,
-            redirect_content,
-            path,
-            folder_path,
-        })
+    pub fn path(&self) -> PathBuf {
+        let mut path = PathBuf::new();
+        path.push(self.data.id.clone());
+        path.push("index.html");
+        path
     }
 }

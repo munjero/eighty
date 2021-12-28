@@ -30,7 +30,8 @@ pub struct AsciiDocOutputSpec {
     pub id: String,
     pub description: String,
     pub discuss: String,
-    pub url: String,
+    pub source_path: String,
+    pub anchor: String,
 }
 
 pub fn process_asciidoc(site_path: &Path, rel_path: &Path) -> Result<AsciiDocOutput, Error> {

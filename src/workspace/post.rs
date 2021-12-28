@@ -36,7 +36,7 @@ impl SimplePostWorkspace {
         let mut spec_site_files = HashMap::new();
         spec_site_files.insert(Path::new("index.html").to_owned(), full.spec_site.index_content.as_bytes().to_owned());
         for (_, spec) in &full.spec_site.specs {
-            spec_site_files.insert(spec.path.clone(), spec.redirect_content.as_bytes().to_owned());
+            spec_site_files.insert(spec.path().clone(), spec.redirect_content.as_bytes().to_owned());
         }
         sites.insert(SiteName("specs".into()), SimplePostSite {
             base_url: "/".to_string(),

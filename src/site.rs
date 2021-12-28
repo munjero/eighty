@@ -1,5 +1,5 @@
 use crate::Error;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize, de::Deserializer};
 use std::{
     fmt,
     fs::File,
@@ -20,13 +20,25 @@ impl fmt::Display for SiteName {
 #[serde(rename_all = "camelCase")]
 pub struct SiteConfig {
     pub title: String,
+    #[serde(deserialize_with = "deserialize_site_url")]
     pub url: String,
+    #[serde(deserialize_with = "deserialize_site_url")]
     pub base_url: String,
     pub author: String,
     pub email: String,
     pub sitemap: SiteConfigSitemap,
     #[serde(default)]
     pub links: Vec<SiteConfigLink>,
+}
+
+fn deserialize_site_url<'de, D>(deserializer: D) -> Result<String, D::Error> where D: Deserializer<'de> {
+    let value = String::deserialize(deserializer)?;
+
+    if !value.ends_with("/") {
+        return Err(<D::Error as serde::de::Error>::custom("site url must end with /"));
+    }
+
+    Ok(value)
 }
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]

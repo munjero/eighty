@@ -218,7 +218,8 @@ impl RenderedDocument {
                             id: spec.id,
                             description: spec.description,
                             discuss: spec.discuss,
-                            url: spec.url,
+                            source_path: Path::new(&spec.source_path).to_owned(),
+                            anchor: spec.anchor,
                         }).collect(),
                     }),
                 }
@@ -248,7 +249,8 @@ impl RenderedDocument {
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct Spec {
     pub id: String,
-    pub url: String,
     pub description: String,
     pub discuss: String,
+    pub source_path: PathBuf,
+    pub anchor: String,
 }

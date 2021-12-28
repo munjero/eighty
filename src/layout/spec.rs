@@ -25,13 +25,13 @@ struct SpecItem {
 }
 
 pub fn index_layout(
-    specs: &[Spec],
+    specs: &[(Spec, String)],
     handlebars: &Handlebars,
 ) -> Result<String, Error> {
     let context = SpecIndexContext {
-        specs: specs.iter().map(|spec| SpecItem {
+        specs: specs.iter().map(|(spec, redirect_url)| SpecItem {
             id: spec.id.clone(),
-            url: spec.url.clone(),
+            url: redirect_url.clone(),
             description: spec.description.clone(),
             discuss: spec.discuss.clone(),
         }).collect(),
@@ -44,12 +44,13 @@ pub fn index_layout(
 
 pub fn redirect_layout(
     spec: &Spec,
+    url: &str,
     handlebars: &Handlebars,
 ) -> Result<String, Error> {
     let context = SpecRedirectContext {
         spec: SpecItem {
             id: spec.id.clone(),
-            url: spec.url.clone(),
+            url: url.to_owned(),
             description: spec.description.clone(),
             discuss: spec.discuss.clone(),
         },

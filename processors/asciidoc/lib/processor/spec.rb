@@ -19,7 +19,8 @@ module Processor
       spec_item[:id] = id
       spec_item[:description] = description
       spec_item[:discuss] = discuss
-      spec_item[:url] = "#{parent.document.attributes['url']}##{parent.id}"
+      spec_item[:sourcePath] = parent.document.attributes['url']
+      spec_item[:anchor] = parent.id
       Processor.specs.push(spec_item)
 
       attrs["name"] = "note"
