@@ -1,18 +1,15 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
+    document::{DocumentMetadata, DocumentName},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     sitemap::{Sitemap, LocalSitemap},
     Error,
 };
-use rayon::prelude::*;
 use std::{
     collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
+    path::{PathBuf},
     sync::Arc,
 };
-use walkdir::WalkDir;
 use handlebars::Handlebars;
 use crate::workspace::{RenderedWorkspace, RenderedSite};
 use crate::asset::AssetStore;

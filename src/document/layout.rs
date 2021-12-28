@@ -1,10 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use super::{DocumentMetadata, RenderedDocument};
+use super::{RenderedDocument};
 use handlebars::Handlebars;
 use crate::Error;
 use crate::sitemap::{Sitemap, SitemapItem};
-use crate::site::SiteMetadata;
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

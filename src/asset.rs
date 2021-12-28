@@ -1,11 +1,6 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
-    file::FileMetadata,
-    site::{SiteMetadata, SiteName},
-    sitemap::{Sitemap, LocalSitemap},
     Error,
 };
-use rayon::prelude::*;
 use std::{
     collections::HashMap,
     fs,
@@ -13,7 +8,6 @@ use std::{
 };
 use walkdir::WalkDir;
 use handlebars::Handlebars;
-use crate::workspace::{MetadatadWorkspace, MetadatadSite, RenderedWorkspace, RenderedSite};
 
 #[derive(Clone, Debug)]
 pub struct AssetStore {

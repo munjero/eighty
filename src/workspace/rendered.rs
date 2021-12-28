@@ -1,20 +1,15 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
+    document::{DocumentName, RenderedDocument},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
-    sitemap::{Sitemap, LocalSitemap},
     Error,
 };
 use rayon::prelude::*;
 use std::{
     collections::HashMap,
-    fs,
-    path::{Path, PathBuf},
+    path::{PathBuf},
     sync::Arc,
 };
-use walkdir::WalkDir;
-use handlebars::Handlebars;
-use std::ops::Deref;
 use super::{MetadatadWorkspace, MetadatadSite};
 
 #[derive(Eq, Clone, PartialEq, Debug)]

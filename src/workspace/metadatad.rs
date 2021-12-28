@@ -1,11 +1,9 @@
 use crate::{
-    document::{DocumentMetadata, DocumentName, DocumentType, RenderedDocument},
+    document::{DocumentMetadata, DocumentName, DocumentType},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
-    sitemap::{Sitemap, LocalSitemap},
     Error,
 };
-use rayon::prelude::*;
 use std::{
     collections::HashMap,
     fs,
@@ -13,8 +11,6 @@ use std::{
     sync::Arc,
 };
 use walkdir::WalkDir;
-use handlebars::Handlebars;
-use std::ops::Deref;
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct MetadatadWorkspace {
