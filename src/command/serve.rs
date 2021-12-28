@@ -1,51 +1,46 @@
 use crate::{
     site::SiteName,
-    workspace::{FullWorkspace, MetadatadWorkspace, RenderedWorkspace},
+    workspace::{FullWorkspace, MetadatadWorkspace, RenderedWorkspace, SimplePostWorkspace},
     Error,
 };
 use hyper::{
     service::{make_service_fn, service_fn},
-    Body, Request, Response, Server,
+    Body, Request, Response, Server, StatusCode,
 };
 use std::{net::SocketAddr, path::Path, sync::Arc};
 
 pub struct Context {
     pub metadatad: MetadatadWorkspace,
     pub rendered: RenderedWorkspace,
-    pub workspace: FullWorkspace,
+    pub full: FullWorkspace,
+    pub post: SimplePostWorkspace,
     pub site_name: SiteName,
 }
 
 async fn handle(req: Request<Body>, context: Arc<Context>) -> Result<Response<Body>, Error> {
     let site = context
-        .workspace
-        .sites
+        .post
         .get(&context.site_name)
         .ok_or(Error::SiteNotExist)?;
 
     let uri_path = Path::new(req.uri().path());
     let rel_path = uri_path.strip_prefix(&site.site.config.base_url)?;
+    let index_rel_path = rel_path.join("index.html");
 
-    if let Some(document_name) = site
-        .documents
-        .keys()
-        .find(|item| item.is_matched(&rel_path))
-    {
-        let document = site
-            .documents
-            .get(&document_name)
-            .ok_or(Error::DocumentNotFound)?;
+    let content = site.files.get(&rel_path.to_owned()).map(|p| (rel_path, p))
+        .or(site.files.get(&index_rel_path.to_owned()).map(|p| (index_rel_path.as_ref(), p)));
 
-        return Ok(Response::builder()
-            .header("Content-Type", "text/html")
-            .body(document.layouted.clone().into())?);
+    if let Some((content_path, content)) = content {
+        let mut response = Response::builder();
+
+        if content_path.extension().and_then(|v| v.to_str()) == Some("html") {
+            response = response.header("Content-Type", "text/html");
+        }
+
+        return Ok(response.body(content.clone().into())?);
+    } else {
+        return Ok(Response::builder().status(StatusCode::NOT_FOUND).body("Not found".into())?);
     }
-
-    if let Some(asset_content) = context.workspace.assets.assets.get(rel_path) {
-        return Ok(Response::builder().body(asset_content.clone().into())?);
-    }
-
-    return Err(Error::DocumentNotFound);
 }
 
 #[tokio::main]
@@ -77,11 +72,13 @@ async fn build(root_path: &Path, site_name: SiteName) -> Result<Context, Error> 
         let metadatad = MetadatadWorkspace::new(&root_path)?;
         let rendered = RenderedWorkspace::new(&metadatad)?;
         let full = FullWorkspace::new(&rendered)?;
+        let post = SimplePostWorkspace::new(&full)?;
 
         let context = Context {
             metadatad,
             rendered,
-            workspace: full,
+            full,
+            post,
             site_name,
         };
 
