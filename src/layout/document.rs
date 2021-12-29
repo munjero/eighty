@@ -62,6 +62,7 @@ struct DocumentContextLocalSitemap {
 struct DocumentContextBreadcrumbItem {
     pub title: String,
     pub url: String,
+    pub description: String,
 }
 
 impl DocumentContextSitemapItem {
@@ -69,8 +70,8 @@ impl DocumentContextSitemapItem {
         let show_children = max_depth.map(|d| d > 0).unwrap_or(true);
 
         Self {
-            title: item.title,
-            path: format!("{}", item.document_name.folder_path().display()),
+            title: item.item.title,
+            path: format!("{}", item.item.document_name.folder_path().display()),
             children: if show_children {
                 item
                     .children
@@ -138,6 +139,7 @@ pub fn layout(
                     DocumentContextBreadcrumbItem {
                         title: item.title.clone(),
                         url: format!("{}{}/", site_config.base_url, item.document_name.folder_path().display()),
+                        description: item.description.clone(),
                     }
                 }).collect())
             } else {
@@ -148,6 +150,7 @@ pub fn layout(
                     DocumentContextBreadcrumbItem {
                         title: item.title.clone(),
                         url: format!("{}{}/", site_config.base_url, item.document_name.folder_path().display()),
+                        description: item.description.clone(),
                     }
                 }).collect())
             } else {

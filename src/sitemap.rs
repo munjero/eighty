@@ -22,22 +22,22 @@ impl Deref for Breadcrumb {
 pub struct BreadcrumbItem {
     pub title: String,
     pub document_name: DocumentName,
+    pub description: String,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct SitemapItem {
-    pub title: String,
-    pub document_name: DocumentName,
+    pub item: BreadcrumbItem,
     pub children: Vec<SitemapItem>,
 }
 
 impl SitemapItem {
-    pub fn maybe_insert(&mut self, document_name: DocumentName, title: String) -> bool {
-        if self.document_name.is_ancestor_of(&document_name) {
+    pub fn maybe_insert(&mut self, item: BreadcrumbItem) -> bool {
+        if self.item.document_name.is_ancestor_of(&item.document_name) {
             let mut inserted = false;
 
             for child in &mut self.children {
-                if child.maybe_insert(document_name.clone(), title.clone()) {
+                if child.maybe_insert(item.clone()) {
                     inserted = true;
                     break;
                 }
@@ -45,8 +45,7 @@ impl SitemapItem {
 
             if !inserted {
                 self.children.push(SitemapItem {
-                    title,
-                    document_name,
+                    item,
                     children: Vec::new(),
                 });
             }
@@ -62,11 +61,11 @@ impl SitemapItem {
 pub struct Sitemap(pub Vec<SitemapItem>);
 
 impl Sitemap {
-    pub fn insert(&mut self, document_name: DocumentName, title: String) {
+    pub fn insert(&mut self, item: BreadcrumbItem) {
         let mut inserted = false;
 
         for child in &mut self.0 {
-            if child.maybe_insert(document_name.clone(), title.clone()) {
+            if child.maybe_insert(item.clone()) {
                 inserted = true;
                 break;
             }
@@ -74,8 +73,7 @@ impl Sitemap {
 
         if !inserted {
             self.0.push(SitemapItem {
-                title,
-                document_name,
+                item,
                 children: Vec::new(),
             });
         }
@@ -88,10 +86,7 @@ impl Sitemap {
                 children: self
                     .0
                     .iter()
-                    .map(|item| BreadcrumbItem {
-                        title: item.title.clone(),
-                        document_name: item.document_name.clone(),
-                    })
+                    .map(|item| item.item.clone())
                     .collect(),
             });
         }
@@ -101,28 +96,22 @@ impl Sitemap {
 
         loop {
             let target = current.iter().find(|item| {
-                item.document_name.is_ancestor_of(&document_name)
-                    || item.document_name == *document_name
+                item.item.document_name.is_ancestor_of(&document_name)
+                    || item.item.document_name == *document_name
             });
 
             if let Some(target) = target {
-                if target.document_name == *document_name {
+                if target.item.document_name == *document_name {
                     return Some(LocalSitemap {
                         breadcrumb: Breadcrumb(breadcrumb),
                         children: target
                             .children
                             .iter()
-                            .map(|item| BreadcrumbItem {
-                                title: item.title.clone(),
-                                document_name: item.document_name.clone(),
-                            })
+                            .map(|item| item.item.clone())
                             .collect(),
                     });
                 } else {
-                    breadcrumb.push(BreadcrumbItem {
-                        title: target.title.clone(),
-                        document_name: target.document_name.clone(),
-                    });
+                    breadcrumb.push(target.item.clone());
 
                     current = &target.children;
                 }
@@ -133,15 +122,15 @@ impl Sitemap {
     }
 }
 
-impl From<Vec<(DocumentName, String)>> for Sitemap {
-    fn from(mut name_titles: Vec<(DocumentName, String)>) -> Sitemap {
-        name_titles.sort_by_key(|(k, _)| k.clone());
+impl From<Vec<BreadcrumbItem>> for Sitemap {
+    fn from(mut name_titles: Vec<BreadcrumbItem>) -> Sitemap {
+        name_titles.sort_by_key(|k| k.document_name.clone());
         let ordered_name_titles = name_titles;
 
         let mut sitemap = Sitemap(Vec::new());
-        for (name, title) in &ordered_name_titles {
-            if !name.is_root() {
-                sitemap.insert(name.clone(), title.clone());
+        for item in &ordered_name_titles {
+            if !item.document_name.is_root() {
+                sitemap.insert(item.clone());
             }
         }
 
@@ -168,7 +157,7 @@ impl fmt::Display for Sitemap {
 }
 
 fn fmt_sitemap_item(f: &mut fmt::Formatter<'_>, item: &SitemapItem, prefix: &str) -> fmt::Result {
-    write!(f, "{}- {}: {}\n", prefix, item.document_name, item.title)?;
+    write!(f, "{}- {}: {}\n", prefix, item.item.document_name, item.item.title)?;
     for child in &item.children {
         fmt_sitemap_item(f, child, &(prefix.to_owned() + "\t"))?;
     }

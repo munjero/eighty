@@ -3,7 +3,7 @@ use crate::{
     document::{DocumentMetadata, DocumentName, RenderedData, Spec},
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
-    sitemap::{LocalSitemap, Sitemap},
+    sitemap::{LocalSitemap, Sitemap, BreadcrumbItem},
     workspace::{RenderedSite, RenderedWorkspace},
     layout,
     variable,
@@ -70,7 +70,11 @@ impl FullSite {
         let name_titles = rendered
             .documents
             .iter()
-            .map(|(k, v)| (k.clone(), v.data.title.clone()))
+            .map(|(k, v)| BreadcrumbItem {
+                document_name: k.clone(),
+                title: v.data.title.clone(),
+                description: v.data.description.clone(),
+            })
             .collect::<Vec<_>>();
 
         let sitemap = Sitemap::from(name_titles.clone());
