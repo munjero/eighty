@@ -101,11 +101,7 @@ impl Sitemap {
         if document_name.is_root() {
             return Some(LocalSitemap {
                 breadcrumb: Breadcrumb(Vec::new()),
-                children: self
-                    .0
-                    .iter()
-                    .map(|item| item.item.clone())
-                    .collect(),
+                children: self.0.iter().map(|item| item.item.clone()).collect(),
             });
         }
 
@@ -175,7 +171,11 @@ impl fmt::Display for Sitemap {
 }
 
 fn fmt_sitemap_item(f: &mut fmt::Formatter<'_>, item: &SitemapItem, prefix: &str) -> fmt::Result {
-    write!(f, "{}- {}: {}\n", prefix, item.item.document_name, item.item.title)?;
+    write!(
+        f,
+        "{}- {}: {}\n",
+        prefix, item.item.document_name, item.item.title
+    )?;
     for child in &item.children {
         fmt_sitemap_item(f, child, &(prefix.to_owned() + "\t"))?;
     }

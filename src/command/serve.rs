@@ -25,10 +25,15 @@ use hyper::{
     service::{make_service_fn, service_fn},
     Body, Request, Response, Server, StatusCode,
 };
-use std::{net::SocketAddr, path::Path, sync::{Arc, RwLock}, thread, fs};
-use std::sync::mpsc::channel;
-use notify::{RecommendedWatcher, Watcher, RecursiveMode, DebouncedEvent};
-use std::time::Duration;
+use notify::{DebouncedEvent, RecommendedWatcher, RecursiveMode, Watcher};
+use std::{
+    fs,
+    net::SocketAddr,
+    path::Path,
+    sync::{mpsc::channel, Arc, RwLock},
+    thread,
+    time::Duration,
+};
 
 pub struct Context {
     pub metadatad: MetadatadWorkspace,
@@ -38,7 +43,10 @@ pub struct Context {
     pub site_name: SiteName,
 }
 
-async fn handle(req: Request<Body>, context: Arc<RwLock<Context>>) -> Result<Response<Body>, Error> {
+async fn handle(
+    req: Request<Body>,
+    context: Arc<RwLock<Context>>,
+) -> Result<Response<Body>, Error> {
     let context = context.read()?;
     let site = context
         .post
@@ -49,8 +57,14 @@ async fn handle(req: Request<Body>, context: Arc<RwLock<Context>>) -> Result<Res
     let rel_path = uri_path.strip_prefix(&site.base_url)?;
     let index_rel_path = rel_path.join("index.html");
 
-    let content = site.files.get(&rel_path.to_owned()).map(|p| (rel_path, p))
-        .or(site.files.get(&index_rel_path.to_owned()).map(|p| (index_rel_path.as_ref(), p)));
+    let content = site
+        .files
+        .get(&rel_path.to_owned())
+        .map(|p| (rel_path, p))
+        .or(site
+            .files
+            .get(&index_rel_path.to_owned())
+            .map(|p| (index_rel_path.as_ref(), p)));
 
     if let Some((content_path, content)) = content {
         let mut response = Response::builder();
@@ -61,7 +75,9 @@ async fn handle(req: Request<Body>, context: Arc<RwLock<Context>>) -> Result<Res
 
         return Ok(response.body(content.clone().into())?);
     } else {
-        return Ok(Response::builder().status(StatusCode::NOT_FOUND).body("Not found".into())?);
+        return Ok(Response::builder()
+            .status(StatusCode::NOT_FOUND)
+            .body("Not found".into())?);
     }
 }
 
@@ -69,7 +85,9 @@ async fn handle(req: Request<Body>, context: Arc<RwLock<Context>>) -> Result<Res
 pub async fn serve(root_path: &Path, site_name: &str) -> Result<(), Error> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 8000));
 
-    let context = Arc::new(RwLock::new(async_build(root_path, SiteName(site_name.to_string())).await?));
+    let context = Arc::new(RwLock::new(
+        async_build(root_path, SiteName(site_name.to_string())).await?,
+    ));
 
     let root_path = root_path.to_owned();
     let site_name = site_name.to_owned();
@@ -86,26 +104,30 @@ pub async fn serve(root_path: &Path, site_name: &str) -> Result<(), Error> {
                 match rx.recv() {
                     Ok(event) => {
                         let should_rebuild = match event {
-                            DebouncedEvent::NoticeWrite(path) | DebouncedEvent::NoticeRemove(path) |
-                            DebouncedEvent::Create(path) | DebouncedEvent::Write(path) |
-                            DebouncedEvent::Chmod(path) | DebouncedEvent::Remove(path) => {
+                            DebouncedEvent::NoticeWrite(path)
+                            | DebouncedEvent::NoticeRemove(path)
+                            | DebouncedEvent::Create(path)
+                            | DebouncedEvent::Write(path)
+                            | DebouncedEvent::Chmod(path)
+                            | DebouncedEvent::Remove(path) => {
                                 should_rebuild_for_path(&path, &root_path)?
-                            },
+                            }
                             DebouncedEvent::Rename(p1, p2) => {
-                                should_rebuild_for_path(&p1, &root_path)? ||
-                                    should_rebuild_for_path(&p2, &root_path)?
-                            },
+                                should_rebuild_for_path(&p1, &root_path)?
+                                    || should_rebuild_for_path(&p2, &root_path)?
+                            }
                             DebouncedEvent::Rescan => true,
                             DebouncedEvent::Error(err, _) => return Err(Error::Notify(err)),
                         };
 
                         if should_rebuild {
                             let mut context = watch_context.write()?;
-                            *context = build(&root_path, SiteName(site_name.to_string()), Some(&context))?;
+                            *context =
+                                build(&root_path, SiteName(site_name.to_string()), Some(&context))?;
 
                             println!("[workspace] rebuilt after source folder changes");
                         }
-                    },
+                    }
                     Err(e) => println!("watch error: {:?}", e),
                 }
             }
@@ -169,5 +191,7 @@ fn should_rebuild_for_path(path: &Path, root_path: &Path) -> Result<bool, Error>
     let root_path = fs::canonicalize(root_path)?;
 
     let rel_path = path.strip_prefix(&root_path)?;
-    Ok(rel_path.iter().all(|label| !label.to_str().map(|l| l.starts_with(".")).unwrap_or(false)))
+    Ok(rel_path
+        .iter()
+        .all(|label| !label.to_str().map(|l| l.starts_with(".")).unwrap_or(false)))
 }

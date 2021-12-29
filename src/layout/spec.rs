@@ -16,10 +16,9 @@
 // You should have received a copy of the GNU General Public License
 // along with Eighty. If not, see <http://www.gnu.org/licenses/>.
 
-use serde::{Deserialize, Serialize};
-use crate::Error;
+use crate::{document::Spec, Error};
 use handlebars::Handlebars;
-use crate::document::Spec;
+use serde::{Deserialize, Serialize};
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -42,17 +41,17 @@ struct SpecItem {
     pub discuss: String,
 }
 
-pub fn index_layout(
-    specs: &[(Spec, String)],
-    handlebars: &Handlebars,
-) -> Result<String, Error> {
+pub fn index_layout(specs: &[(Spec, String)], handlebars: &Handlebars) -> Result<String, Error> {
     let context = SpecIndexContext {
-        specs: specs.iter().map(|(spec, redirect_url)| SpecItem {
-            id: spec.id.clone(),
-            url: redirect_url.clone(),
-            description: spec.description.clone(),
-            discuss: spec.discuss.clone(),
-        }).collect(),
+        specs: specs
+            .iter()
+            .map(|(spec, redirect_url)| SpecItem {
+                id: spec.id.clone(),
+                url: redirect_url.clone(),
+                description: spec.description.clone(),
+                discuss: spec.discuss.clone(),
+            })
+            .collect(),
     };
 
     let layouted = handlebars.render("spec/index", &context)?;
@@ -60,11 +59,7 @@ pub fn index_layout(
     Ok(layouted)
 }
 
-pub fn redirect_layout(
-    spec: &Spec,
-    url: &str,
-    handlebars: &Handlebars,
-) -> Result<String, Error> {
+pub fn redirect_layout(spec: &Spec, url: &str, handlebars: &Handlebars) -> Result<String, Error> {
     let context = SpecRedirectContext {
         spec: SpecItem {
             id: spec.id.clone(),

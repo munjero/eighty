@@ -17,7 +17,7 @@
 // along with Eighty. If not, see <http://www.gnu.org/licenses/>.
 
 use crate::Error;
-use serde::{Deserialize, Serialize, de::Deserializer};
+use serde::{de::Deserializer, Deserialize, Serialize};
 use std::{
     fmt,
     fs::File,
@@ -49,11 +49,16 @@ pub struct SiteConfig {
     pub links: Vec<SiteConfigLink>,
 }
 
-fn deserialize_site_url<'de, D>(deserializer: D) -> Result<String, D::Error> where D: Deserializer<'de> {
+fn deserialize_site_url<'de, D>(deserializer: D) -> Result<String, D::Error>
+where
+    D: Deserializer<'de>,
+{
     let value = String::deserialize(deserializer)?;
 
     if !value.ends_with("/") {
-        return Err(<D::Error as serde::de::Error>::custom("site url must end with /"));
+        return Err(<D::Error as serde::de::Error>::custom(
+            "site url must end with /",
+        ));
     }
 
     Ok(value)
@@ -83,7 +88,7 @@ pub struct SiteMetadata {
 impl SiteMetadata {
     pub fn new(name: SiteName, path: &Path) -> Result<SiteMetadata, Error> {
         if name.0 == "specs" {
-            return Err(Error::ReservedSiteName)
+            return Err(Error::ReservedSiteName);
         }
 
         let site_config_path = path.join("_site.json");

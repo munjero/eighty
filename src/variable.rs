@@ -16,8 +16,8 @@
 // You should have received a copy of the GNU General Public License
 // along with Eighty. If not, see <http://www.gnu.org/licenses/>.
 
-use regex::Regex;
 use crate::Error;
+use regex::Regex;
 
 #[derive(Eq, PartialEq, Debug, Clone)]
 pub struct Variable {
@@ -32,12 +32,27 @@ pub fn search(content: &str) -> Result<Vec<Variable>, Error> {
     let re = Regex::new(r"@@(.+)@@")?;
 
     for caps in re.captures_iter(content) {
-        let full = caps.get(0).ok_or(Error::UnprocessedRegexMatch)?.as_str().to_owned();
-        let raw = caps.get(1).ok_or(Error::UnprocessedRegexMatch)?.as_str().to_owned();
+        let full = caps
+            .get(0)
+            .ok_or(Error::UnprocessedRegexMatch)?
+            .as_str()
+            .to_owned();
+        let raw = caps
+            .get(1)
+            .ok_or(Error::UnprocessedRegexMatch)?
+            .as_str()
+            .to_owned();
         let mut splited = raw.splitn(2, ':');
-        let name = splited.next().expect("will return at least one item; qed").to_string();
+        let name = splited
+            .next()
+            .expect("will return at least one item; qed")
+            .to_string();
         let arguments = splited.next().map(|v| v.to_string());
-        matches.push(Variable { full, name, arguments });
+        matches.push(Variable {
+            full,
+            name,
+            arguments,
+        });
     }
 
     Ok(matches)

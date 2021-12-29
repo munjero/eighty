@@ -46,7 +46,10 @@ impl RenderedWorkspace {
         })
     }
 
-    pub fn new_with_old(metadata: &MetadatadWorkspace, old: &RenderedWorkspace) -> Result<RenderedWorkspace, Error> {
+    pub fn new_with_old(
+        metadata: &MetadatadWorkspace,
+        old: &RenderedWorkspace,
+    ) -> Result<RenderedWorkspace, Error> {
         let sites = metadata
             .sites
             .par_iter()
@@ -93,14 +96,19 @@ impl RenderedSite {
         })
     }
 
-    pub fn new_with_old(metadata: &MetadatadSite, old: &RenderedSite) -> Result<RenderedSite, Error> {
+    pub fn new_with_old(
+        metadata: &MetadatadSite,
+        old: &RenderedSite,
+    ) -> Result<RenderedSite, Error> {
         let documents = metadata
             .documents
             .par_iter()
             .map(|(name, document)| {
                 if let Some(old_document) = old.documents.get(&name) {
-                    if old_document.site_metadata == metadata.site && old_document.metadata == *document {
-                        return Ok((name.clone(), old_document.clone()))
+                    if old_document.site_metadata == metadata.site
+                        && old_document.metadata == *document
+                    {
+                        return Ok((name.clone(), old_document.clone()));
                     }
                 }
 

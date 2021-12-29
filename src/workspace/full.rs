@@ -20,15 +20,19 @@ use crate::{
     asset::AssetStore,
     document::{DocumentMetadata, DocumentName, RenderedData, Spec},
     file::FileMetadata,
-    site::{SiteMetadata, SiteName},
-    sitemap::{LocalSitemap, Sitemap, BreadcrumbItem},
-    workspace::{RenderedSite, RenderedWorkspace},
     layout,
+    site::{SiteMetadata, SiteName},
+    sitemap::{BreadcrumbItem, LocalSitemap, Sitemap},
     variable,
+    workspace::{RenderedSite, RenderedWorkspace},
     Error,
 };
 use handlebars::Handlebars;
-use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
+use std::{
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::Arc,
+};
 
 pub struct FullWorkspace {
     pub root_path: PathBuf,
@@ -52,14 +56,22 @@ impl FullWorkspace {
             for (_, document) in &site.documents {
                 for spec in &document.rendered.specs {
                     let site_url = site.site.config.url.clone();
-                    let redirect_url = format!("{}{}/", site_url, document.metadata.name.folder_path().display());
-                    let redirect_content = layout::spec_redirect(&spec, &redirect_url, &assets.handlebars)?;
+                    let redirect_url = format!(
+                        "{}{}/",
+                        site_url,
+                        document.metadata.name.folder_path().display()
+                    );
+                    let redirect_content =
+                        layout::spec_redirect(&spec, &redirect_url, &assets.handlebars)?;
 
-                    specs.insert(spec.id.clone(), FullSpec {
-                        redirect_content,
-                        redirect_url,
-                        data: spec.clone(),
-                    });
+                    specs.insert(
+                        spec.id.clone(),
+                        FullSpec {
+                            redirect_content,
+                            redirect_url,
+                            data: spec.clone(),
+                        },
+                    );
                 }
             }
         }
@@ -99,7 +111,10 @@ impl FullSite {
 
         let mut xrefs = HashMap::new();
         for (name, document) in &rendered.documents {
-            let rel_path = document.metadata.source_path.strip_prefix(&rendered.site.source_path)?;
+            let rel_path = document
+                .metadata
+                .source_path
+                .strip_prefix(&rendered.site.source_path)?;
             xrefs.insert(rel_path.to_owned(), name.clone());
         }
 
@@ -118,8 +133,11 @@ impl FullSite {
                             let resolved = format!(
                                 "{}{}/",
                                 rendered.site.config.base_url,
-                                xrefs.get(Path::new(&xreflink))
-                                    .ok_or(Error::UnresolvedXreflink)?.folder_path().display()
+                                xrefs
+                                    .get(Path::new(&xreflink))
+                                    .ok_or(Error::UnresolvedXreflink)?
+                                    .folder_path()
+                                    .display()
                             );
 
                             content = content.replace(&variable.full, &resolved);
@@ -172,7 +190,10 @@ pub struct FullSpecSite {
 impl FullSpecSite {
     pub fn new(specs: HashMap<String, FullSpec>, handlebars: &Handlebars) -> Result<Self, Error> {
         let sorted_specs = {
-            let mut specs = specs.values().map(|v| (v.data.clone(), v.redirect_url.clone())).collect::<Vec<_>>();
+            let mut specs = specs
+                .values()
+                .map(|v| (v.data.clone(), v.redirect_url.clone()))
+                .collect::<Vec<_>>();
             specs.sort_by_key(|v| v.0.id.clone());
             specs
         };

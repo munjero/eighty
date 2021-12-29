@@ -17,8 +17,8 @@
 // along with Eighty. If not, see <http://www.gnu.org/licenses/>.
 
 use crate::{
-    sitemap::{Sitemap, SitemapItem, LocalSitemap},
     document::RenderedDocument,
+    sitemap::{LocalSitemap, Sitemap, SitemapItem},
     Error,
 };
 use handlebars::Handlebars;
@@ -91,10 +91,14 @@ impl DocumentContextSitemapItem {
             title: item.item.title,
             path: format!("{}", item.item.document_name.folder_path().display()),
             children: if show_children {
-                item
-                    .children
+                item.children
                     .iter()
-                    .map(|child| Self::from_sitemap_item(child.clone(), max_depth.map(|d| d.saturating_sub(1))))
+                    .map(|child| {
+                        Self::from_sitemap_item(
+                            child.clone(),
+                            max_depth.map(|d| d.saturating_sub(1)),
+                        )
+                    })
                     .collect()
             } else {
                 Vec::new()
@@ -126,10 +130,14 @@ pub fn layout(
         ),
 
         has_site_links: false,
-        site_links: site_config.links.iter().map(|link| DocumentContextSiteLink {
-            url: link.url.clone(),
-            name: link.name.clone(),
-        }).collect(),
+        site_links: site_config
+            .links
+            .iter()
+            .map(|link| DocumentContextSiteLink {
+                url: link.url.clone(),
+                name: link.name.clone(),
+            })
+            .collect(),
 
         toc: rendered.data.toc.clone(),
         page_content: rendered.data.content.clone(),
@@ -142,39 +150,60 @@ pub fn layout(
         page_license_code: rendered.data.license_code.clone(),
 
         sitemap: if site_config.sitemap.enable {
-            Some(sitemap.iter().map(|child| {
-                DocumentContextSitemapItem::from_sitemap_item(
-                    child.clone(),
-                    site_config.sitemap.depth.map(|d| d.saturating_sub(1)),
-                )
-            }).collect())
+            Some(
+                sitemap
+                    .iter()
+                    .map(|child| {
+                        DocumentContextSitemapItem::from_sitemap_item(
+                            child.clone(),
+                            site_config.sitemap.depth.map(|d| d.saturating_sub(1)),
+                        )
+                    })
+                    .collect(),
+            )
         } else {
             None
         },
         local_sitemap: DocumentContextLocalSitemap {
             breadcrumb: if local_sitemap.breadcrumb.len() > 0 {
-                Some(local_sitemap.breadcrumb.iter().map(|item| {
-                    DocumentContextBreadcrumbItem {
-                        title: item.title.clone(),
-                        url: format!("{}{}/", site_config.base_url, item.document_name.folder_path().display()),
-                        description: item.description.clone(),
-                    }
-                }).collect())
+                Some(
+                    local_sitemap
+                        .breadcrumb
+                        .iter()
+                        .map(|item| DocumentContextBreadcrumbItem {
+                            title: item.title.clone(),
+                            url: format!(
+                                "{}{}/",
+                                site_config.base_url,
+                                item.document_name.folder_path().display()
+                            ),
+                            description: item.description.clone(),
+                        })
+                        .collect(),
+                )
             } else {
                 None
             },
             children: if local_sitemap.children.len() > 0 {
-                Some(local_sitemap.children.iter().map(|item| {
-                    DocumentContextBreadcrumbItem {
-                        title: item.title.clone(),
-                        url: format!("{}{}/", site_config.base_url, item.document_name.folder_path().display()),
-                        description: item.description.clone(),
-                    }
-                }).collect())
+                Some(
+                    local_sitemap
+                        .children
+                        .iter()
+                        .map(|item| DocumentContextBreadcrumbItem {
+                            title: item.title.clone(),
+                            url: format!(
+                                "{}{}/",
+                                site_config.base_url,
+                                item.document_name.folder_path().display()
+                            ),
+                            description: item.description.clone(),
+                        })
+                        .collect(),
+                )
             } else {
                 None
             },
-        }
+        },
     };
 
     let layouted = handlebars.render("document/main", &context)?;

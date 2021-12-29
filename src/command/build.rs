@@ -17,10 +17,10 @@
 // along with Eighty. If not, see <http://www.gnu.org/licenses/>.
 
 use eighty::{
-    workspace::{MetadatadWorkspace, RenderedWorkspace, FullWorkspace, SimplePostWorkspace},
+    workspace::{FullWorkspace, MetadatadWorkspace, RenderedWorkspace, SimplePostWorkspace},
     Error,
 };
-use std::{path::Path, fs};
+use std::{fs, path::Path};
 
 pub fn build(root_path: &Path, target_path: &Path) -> Result<(), Error> {
     let metadatad = MetadatadWorkspace::new(&root_path)?;
@@ -34,7 +34,11 @@ pub fn build(root_path: &Path, target_path: &Path) -> Result<(), Error> {
         for (file_path, file) in &site.files {
             let file_target_path = site_target_path.join(file_path);
 
-            fs::create_dir_all(file_target_path.parent().ok_or(Error::InvalidPathComponent)?)?;
+            fs::create_dir_all(
+                file_target_path
+                    .parent()
+                    .ok_or(Error::InvalidPathComponent)?,
+            )?;
             fs::write(file_target_path, &file[..])?;
         }
     }

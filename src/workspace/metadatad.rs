@@ -81,21 +81,23 @@ impl MetadatadSite {
         let mut documents = HashMap::new();
         let mut files = HashMap::new();
 
-        let walker = WalkDir::new(&site.source_path).into_iter().filter_entry(|entry| {
-            if let Some(file_name) = entry.file_name().to_str() {
-                if file_name == "_posts" && entry.file_type().is_dir() {
+        let walker = WalkDir::new(&site.source_path)
+            .into_iter()
+            .filter_entry(|entry| {
+                if let Some(file_name) = entry.file_name().to_str() {
+                    if file_name == "_posts" && entry.file_type().is_dir() {
+                        return true;
+                    }
+
+                    if file_name.starts_with(".") || file_name.starts_with("_") {
+                        return false;
+                    }
+
                     return true;
                 }
 
-                if file_name.starts_with(".") || file_name.starts_with("_") {
-                    return false;
-                }
-
-                return true;
-            }
-
-            return false;
-        });
+                return false;
+            });
 
         for entry in walker {
             let entry = entry?;

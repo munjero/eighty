@@ -19,8 +19,8 @@
 mod command;
 
 use clap::{App, Arg, SubCommand};
-use std::path::Path;
 use eighty::Error;
+use std::path::Path;
 
 fn main() -> Result<(), Error> {
     let matches = App::new("Eighty")

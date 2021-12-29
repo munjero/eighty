@@ -232,13 +232,17 @@ impl RenderedDocument {
                         description_content: None,
                         license: output.document.license,
                         license_code: output.document.license_code,
-                        specs: output.specs.into_iter().map(|spec| Spec {
-                            id: spec.id,
-                            description: spec.description,
-                            discuss: spec.discuss,
-                            source_path: Path::new(&spec.source_path).to_owned(),
-                            anchor: spec.anchor,
-                        }).collect(),
+                        specs: output
+                            .specs
+                            .into_iter()
+                            .map(|spec| Spec {
+                                id: spec.id,
+                                description: spec.description,
+                                discuss: spec.discuss,
+                                source_path: Path::new(&spec.source_path).to_owned(),
+                                anchor: spec.anchor,
+                            })
+                            .collect(),
                     }),
                 }
             }
