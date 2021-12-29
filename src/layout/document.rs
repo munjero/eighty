@@ -49,16 +49,22 @@ struct DocumentContextSitemapItem {
     pub children: Vec<DocumentContextSitemapItem>,
 }
 
-impl From<SitemapItem> for DocumentContextSitemapItem {
-    fn from(item: SitemapItem) -> Self {
+impl DocumentContextSitemapItem {
+    pub fn from_sitemap_item(item: SitemapItem, max_depth: Option<usize>) -> Self {
+        let show_children = max_depth.map(|d| d > 0).unwrap_or(true);
+
         Self {
             title: item.title,
             path: format!("{}", item.document_name.folder_path().display()),
-            children: item
-                .children
-                .iter()
-                .map(|child| child.clone().into())
-                .collect(),
+            children: if show_children {
+                item
+                    .children
+                    .iter()
+                    .map(|child| Self::from_sitemap_item(child.clone(), max_depth.map(|d| d.saturating_sub(1))))
+                    .collect()
+            } else {
+                Vec::new()
+            },
         }
     }
 }
@@ -101,7 +107,12 @@ pub fn layout(
         page_license_code: rendered.data.license_code.clone(),
 
         sitemap: if site_config.sitemap.enable {
-            Some(sitemap.iter().map(|child| child.clone().into()).collect())
+            Some(sitemap.iter().map(|child| {
+                DocumentContextSitemapItem::from_sitemap_item(
+                    child.clone(),
+                    site_config.sitemap.depth.map(|d| d.saturating_sub(1)),
+                )
+            }).collect())
         } else {
             None
         },
