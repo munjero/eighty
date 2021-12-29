@@ -20,6 +20,10 @@ pub enum Error {
 
     Poisoned,
     Notify(notify::Error),
+    Regex(regex::Error),
+    UnprocessedRegexMatch,
+    UnsupportedVariable,
+    UnresolvedXreflink,
 }
 
 impl fmt::Display for Error {
@@ -87,5 +91,11 @@ impl<T> From<std::sync::PoisonError<T>> for Error {
 impl From<notify::Error> for Error {
     fn from(err: notify::Error) -> Error {
         Error::Notify(err)
+    }
+}
+
+impl From<regex::Error> for Error {
+    fn from(err: regex::Error) -> Error {
+        Error::Regex(err)
     }
 }

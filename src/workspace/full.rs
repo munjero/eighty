@@ -6,10 +6,11 @@ use crate::{
     sitemap::{LocalSitemap, Sitemap},
     workspace::{RenderedSite, RenderedWorkspace},
     layout,
+    variable,
     Error,
 };
 use handlebars::Handlebars;
-use std::{collections::HashMap, path::PathBuf, sync::Arc};
+use std::{collections::HashMap, path::{Path, PathBuf}, sync::Arc};
 
 pub struct FullWorkspace {
     pub root_path: PathBuf,
@@ -74,27 +75,50 @@ impl FullSite {
 
         let sitemap = Sitemap::from(name_titles.clone());
 
+        let mut xrefs = HashMap::new();
+        for (name, document) in &rendered.documents {
+            let rel_path = document.metadata.source_path.strip_prefix(&rendered.site.source_path)?;
+            xrefs.insert(rel_path.to_owned(), name.clone());
+        }
+
         let full_documents = rendered
             .documents
             .iter()
             .map(|(k, v)| {
+                let mut content = layout::document(&v, &sitemap, handlebars)?;
+                let variables = variable::search(&content)?;
+
+                for variable in variables {
+                    if &variable.name == "XREFLINK" {
+                        if let Some(xreflink) = variable.arguments {
+                            let resolved = format!(
+                                "{}{}/",
+                                rendered.site.config.base_url,
+                                xrefs.get(Path::new(&xreflink))
+                                    .ok_or(Error::UnresolvedXreflink)?.folder_path().display()
+                            );
+
+                            content = content.replace(&variable.full, &resolved);
+                        } else {
+                            return Err(Error::UnsupportedVariable);
+                        }
+                    } else {
+                        return Err(Error::UnsupportedVariable);
+                    }
+                }
+
                 Ok((
                     k.clone(),
                     FullDocument {
                         site_metadata: v.site_metadata.clone(),
                         metadata: v.metadata.clone(),
                         rendered: v.data.clone(),
-                        content: layout::document(&v, &sitemap, handlebars)?,
+                        content,
                         local_sitemap: sitemap.local(&k).ok_or(Error::DocumentNotFound)?,
                     },
                 ))
             })
             .collect::<Result<HashMap<DocumentName, FullDocument>, Error>>()?;
-
-        let mut xrefs = HashMap::new();
-        for (name, document) in &full_documents {
-            xrefs.insert(document.metadata.source_path.clone(), name.clone());
-        }
 
         Ok(Self {
             site: rendered.site.clone(),
