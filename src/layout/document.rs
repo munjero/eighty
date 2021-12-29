@@ -31,7 +31,7 @@ struct DocumentContext {
     pub page_license: Option<String>,
     pub page_license_code: Option<String>,
 
-    pub sitemap: Vec<DocumentContextSitemapItem>,
+    pub sitemap: Option<Vec<DocumentContextSitemapItem>>,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -100,7 +100,11 @@ pub fn layout(
         page_license: rendered.data.license.clone(),
         page_license_code: rendered.data.license_code.clone(),
 
-        sitemap: sitemap.iter().map(|child| child.clone().into()).collect(),
+        sitemap: if site_config.sitemap.enable {
+            Some(sitemap.iter().map(|child| child.clone().into()).collect())
+        } else {
+            None
+        },
     };
 
     let layouted = handlebars.render("document/main", &context)?;
