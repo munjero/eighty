@@ -1,5 +1,5 @@
 use crate::{
-    sitemap::{Sitemap, SitemapItem},
+    sitemap::{Sitemap, SitemapItem, LocalSitemap},
     document::RenderedDocument,
     Error,
 };
@@ -32,6 +32,7 @@ struct DocumentContext {
     pub page_license_code: Option<String>,
 
     pub sitemap: Option<Vec<DocumentContextSitemapItem>>,
+    pub local_sitemap: DocumentContextLocalSitemap,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
@@ -47,6 +48,20 @@ struct DocumentContextSitemapItem {
     pub title: String,
     pub path: String,
     pub children: Vec<DocumentContextSitemapItem>,
+}
+
+#[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DocumentContextLocalSitemap {
+    pub breadcrumb: Option<Vec<DocumentContextBreadcrumbItem>>,
+    pub children: Option<Vec<DocumentContextBreadcrumbItem>>,
+}
+
+#[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct DocumentContextBreadcrumbItem {
+    pub title: String,
+    pub url: String,
 }
 
 impl DocumentContextSitemapItem {
@@ -72,6 +87,7 @@ impl DocumentContextSitemapItem {
 pub fn layout(
     rendered: &RenderedDocument,
     sitemap: &Sitemap,
+    local_sitemap: &LocalSitemap,
     handlebars: &Handlebars,
 ) -> Result<String, Error> {
     let site_config = &rendered.site_metadata.config;
@@ -116,6 +132,28 @@ pub fn layout(
         } else {
             None
         },
+        local_sitemap: DocumentContextLocalSitemap {
+            breadcrumb: if local_sitemap.breadcrumb.len() > 0 {
+                Some(local_sitemap.breadcrumb.iter().map(|item| {
+                    DocumentContextBreadcrumbItem {
+                        title: item.title.clone(),
+                        url: format!("{}{}/", site_config.base_url, item.document_name.folder_path().display()),
+                    }
+                }).collect())
+            } else {
+                None
+            },
+            children: if local_sitemap.children.len() > 0 {
+                Some(local_sitemap.children.iter().map(|item| {
+                    DocumentContextBreadcrumbItem {
+                        title: item.title.clone(),
+                        url: format!("{}{}/", site_config.base_url, item.document_name.folder_path().display()),
+                    }
+                }).collect())
+            } else {
+                None
+            },
+        }
     };
 
     let layouted = handlebars.render("document/main", &context)?;

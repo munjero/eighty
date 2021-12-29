@@ -85,7 +85,9 @@ impl FullSite {
             .documents
             .iter()
             .map(|(k, v)| {
-                let mut content = layout::document(&v, &sitemap, handlebars)?;
+                let local_sitemap = sitemap.local(&k).ok_or(Error::DocumentNotFound)?;
+
+                let mut content = layout::document(&v, &sitemap, &local_sitemap, handlebars)?;
                 let variables = variable::search(&content)?;
 
                 for variable in variables {
@@ -114,7 +116,7 @@ impl FullSite {
                         metadata: v.metadata.clone(),
                         rendered: v.data.clone(),
                         content,
-                        local_sitemap: sitemap.local(&k).ok_or(Error::DocumentNotFound)?,
+                        local_sitemap,
                     },
                 ))
             })
