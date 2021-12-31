@@ -49,6 +49,27 @@ if os.path.splitext(file_path)[1] == ".md":
         "content": html,
         "toc": toc,
     }, sort_keys=True, indent=4)
+elif os.path.splitext(file_path)[1] == ".org":
+    pandoc_raw = json.loads(subprocess.run("pandoc -f org -t json {}".format(file_path), shell=True, check=True, capture_output=True).stdout)
+
+    title = parse_meta(pandoc_raw, "title")
+    description = parse_meta(pandoc_raw, "subtitle")
+    order = parse_meta(pandoc_raw, "order")
+
+    if not order is None:
+        order = int(order)
+
+    html = subprocess.run("pandoc -f org -t html {}".format(file_path), shell=True, check=True, capture_output=True).stdout.decode("utf-8")
+    toc = subprocess.run("pandoc --toc -f org -t html --template {} {}".format(TOC_TEMPLATE, file_path), shell=True, check=True, capture_output=True).stdout.decode("utf-8")
+
+    content = json.dumps({
+        "title": title,
+        "description": description,
+        "descriptionContent": description,
+        "order": order,
+        "content": html,
+        "toc": toc,
+    }, sort_keys=True, indent=4)
 else:
     raise "Unknown file extension"
 
