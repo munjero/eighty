@@ -18,6 +18,7 @@
 
 mod asciidoc;
 mod markdown;
+mod org;
 
 use crate::{site::SiteMetadata, Error};
 use std::{
@@ -111,6 +112,20 @@ pub struct DocumentPostLabel {
 pub enum DocumentType {
     AsciiDoc,
     Markdown,
+    Org,
+}
+
+impl<'a> TryFrom<&'a str> for DocumentType {
+    type Error = ();
+
+    fn try_from(s: &'a str) -> Result<DocumentType, ()> {
+        match s {
+            "adoc" => Ok(DocumentType::AsciiDoc),
+            "md" => Ok(DocumentType::Markdown),
+            "org" => Ok(DocumentType::Org),
+            _ => Err(()),
+        }
+    }
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
@@ -248,6 +263,24 @@ impl RenderedDocument {
             }
             DocumentType::Markdown => {
                 let output = self::markdown::process_markdown(&site.source_path, &rel_file_path)?;
+
+                RenderedDocument {
+                    site_metadata: site,
+                    metadata: document,
+                    data: Arc::new(RenderedData {
+                        title: output.title,
+                        content: output.content,
+                        toc: Some(output.toc),
+                        description: output.description,
+                        description_content: Some(output.description_content),
+                        license: None,
+                        license_code: None,
+                        specs: Vec::new(),
+                    }),
+                }
+            }
+            DocumentType::Org => {
+                let output = self::org::process_org(&site.source_path, &rel_file_path)?;
 
                 RenderedDocument {
                     site_metadata: site,

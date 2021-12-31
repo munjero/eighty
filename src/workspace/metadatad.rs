@@ -107,12 +107,7 @@ impl MetadatadSite {
 
                 let typ = if let Some(extension) = entry.path().extension() {
                     let extension = extension.to_str().ok_or(Error::PathContainNonUnicode)?;
-
-                    match extension {
-                        "md" => Some(DocumentType::Markdown),
-                        "adoc" => Some(DocumentType::AsciiDoc),
-                        _ => None,
-                    }
+                    DocumentType::try_from(extension).ok()
                 } else {
                     None
                 };
