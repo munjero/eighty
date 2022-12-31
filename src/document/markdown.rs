@@ -23,7 +23,9 @@ use std::{path::Path, process::Command};
 #[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MarkdownOutput {
+    pub id: Option<String>,
     pub title: String,
+    pub sitemap_title: Option<String>,
     pub description: String,
     pub description_content: String,
     pub order: Option<usize>,

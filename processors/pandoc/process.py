@@ -32,6 +32,8 @@ if os.path.splitext(file_path)[1] == ".md":
     pandoc_raw = json.loads(subprocess.run("pandoc -f markdown -t json {}".format(file_path), shell=True, check=True, capture_output=True).stdout)
 
     title = parse_meta(pandoc_raw, "title")
+    sitemap_title = parse_meta(pandoc_raw, "sitemap")
+    document_id = parse_meta(pandoc_raw, "id")
     description = parse_meta(pandoc_raw, "subtitle")
     order = parse_meta(pandoc_raw, "order")
 
@@ -45,6 +47,8 @@ if os.path.splitext(file_path)[1] == ".md":
         "title": title,
         "description": description,
         "descriptionContent": description,
+        "sitemapTitle": sitemap_title,
+        "id": document_id,
         "order": order,
         "content": html,
         "toc": toc,

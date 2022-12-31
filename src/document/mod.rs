@@ -30,6 +30,7 @@ use std::{
 
 #[derive(Hash, Eq, Clone, PartialEq, Debug, PartialOrd, Ord)]
 pub struct DocumentName {
+    pub id: Option<String>,
     pub labels: Vec<String>,
     pub post: Option<DocumentPostLabel>,
 }
@@ -61,13 +62,17 @@ impl DocumentName {
     pub fn folder_path(&self) -> PathBuf {
         let mut path = PathBuf::new();
 
-        for label in &self.labels {
-            path.push(label);
-        }
+        if let Some(id) = &self.id {
+            path.push(id);
+        } else {
+            for label in &self.labels {
+                path.push(label);
+            }
 
-        if let Some(post) = self.post.as_ref() {
-            path.push(post.date.split('-').collect::<Vec<_>>().join("/"));
-            path.push(&post.label);
+            if let Some(post) = self.post.as_ref() {
+                path.push(post.date.split('-').collect::<Vec<_>>().join("/"));
+                path.push(&post.label);
+            }
         }
 
         path
@@ -130,10 +135,10 @@ impl<'a> TryFrom<&'a str> for DocumentType {
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct DocumentMetadata {
-    pub name: DocumentName,
     pub typ: DocumentType,
     pub modified: SystemTime,
     pub source_path: PathBuf,
+    pub rel_source_path: PathBuf,
 }
 
 impl DocumentMetadata {
@@ -143,19 +148,16 @@ impl DocumentMetadata {
         typ: DocumentType,
         modified: SystemTime,
     ) -> Result<DocumentMetadata, Error> {
-        let rel_file_path = file_path.strip_prefix(&site.source_path)?;
-        let name = derive_name(&rel_file_path)?;
-
         Ok(DocumentMetadata {
-            name,
             source_path: file_path.to_owned(),
+            rel_source_path: file_path.strip_prefix(&site.source_path)?.to_owned(),
             modified,
             typ,
         })
     }
 }
 
-fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Error> {
+fn derive_name(rel_file_path: &Path, id: Option<String>) -> Result<DocumentName, Error> {
     let mut labels = Vec::new();
     let mut is_post = false;
     let mut components = rel_file_path.components().peekable();
@@ -201,12 +203,14 @@ fn derive_name(rel_file_path: &Path) -> Result<DocumentName, Error> {
         None
     };
 
-    Ok(DocumentName { labels, post })
+    Ok(DocumentName { id, labels, post })
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedData {
+    pub name: DocumentName,
     pub title: String,
+    pub sitemap_title: Option<String>,
     pub content: String,
     pub toc: Option<String>,
     pub description: String,
@@ -228,19 +232,23 @@ impl RenderedDocument {
         site: Arc<SiteMetadata>,
         document: Arc<DocumentMetadata>,
     ) -> Result<RenderedDocument, Error> {
-        println!("[{}] Rendering document {} ...", site.name, document.name);
+        let rel_file_path = &document.rel_source_path;
 
-        let rel_file_path = document.source_path.strip_prefix(&site.source_path)?;
+        println!("[{}] Rendering document {:?} ...", site.name, rel_file_path);
 
         Ok(match document.typ {
             DocumentType::AsciiDoc => {
                 let output = self::asciidoc::process_asciidoc(&site.source_path, &rel_file_path)?;
+                let id = None;
+                let name = derive_name(rel_file_path, id)?;
 
                 RenderedDocument {
                     site_metadata: site,
                     metadata: document,
                     data: Arc::new(RenderedData {
+                        name,
                         title: output.document.title,
+                        sitemap_title: None,
                         content: output.document.content,
                         toc: output.document.toc,
                         description: output.document.description.clone(),
@@ -263,12 +271,16 @@ impl RenderedDocument {
             }
             DocumentType::Markdown => {
                 let output = self::markdown::process_markdown(&site.source_path, &rel_file_path)?;
+                let id = output.id;
+                let name = derive_name(rel_file_path, id)?;
 
                 RenderedDocument {
                     site_metadata: site,
                     metadata: document,
                     data: Arc::new(RenderedData {
+                        name,
                         title: output.title,
+                        sitemap_title: output.sitemap_title,
                         content: output.content,
                         toc: Some(output.toc),
                         description: output.description,
@@ -281,12 +293,16 @@ impl RenderedDocument {
             }
             DocumentType::Org => {
                 let output = self::org::process_org(&site.source_path, &rel_file_path)?;
+                let id = None;
+                let name = derive_name(rel_file_path, id)?;
 
                 RenderedDocument {
                     site_metadata: site,
                     metadata: document,
                     data: Arc::new(RenderedData {
+                        name,
                         title: output.title,
+                        sitemap_title: None,
                         content: output.content,
                         toc: Some(output.toc),
                         description: output.description,

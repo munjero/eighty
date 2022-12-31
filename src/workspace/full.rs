@@ -53,13 +53,13 @@ impl FullWorkspace {
 
         let mut specs = HashMap::new();
         for (_, site) in &sites {
-            for (_, document) in &site.documents {
+            for document in &site.documents {
                 for spec in &document.rendered.specs {
                     let site_url = site.site.config.url.clone();
                     let redirect_url = format!(
                         "{}{}/",
                         site_url,
-                        document.metadata.name.folder_path().display()
+                        document.rendered.name.folder_path().display()
                     );
                     let redirect_content =
                         layout::spec_redirect(&spec, &redirect_url, &assets.handlebars)?;
@@ -89,7 +89,7 @@ impl FullWorkspace {
 
 pub struct FullSite {
     pub site: Arc<SiteMetadata>,
-    pub documents: HashMap<DocumentName, FullDocument>,
+    pub documents: Vec<FullDocument>,
     pub files: Arc<HashMap<PathBuf, FileMetadata>>,
     pub xrefs: HashMap<PathBuf, DocumentName>,
     pub sitemap: Sitemap,
@@ -100,8 +100,8 @@ impl FullSite {
         let name_titles = rendered
             .documents
             .iter()
-            .map(|(k, v)| BreadcrumbItem {
-                document_name: k.clone(),
+            .map(|(_, v)| BreadcrumbItem {
+                document_name: v.data.name.clone(),
                 title: v.data.title.clone(),
                 description: v.data.description.clone(),
             })
@@ -110,19 +110,19 @@ impl FullSite {
         let sitemap = Sitemap::from(name_titles.clone());
 
         let mut xrefs = HashMap::new();
-        for (name, document) in &rendered.documents {
+        for (_, document) in &rendered.documents {
             let rel_path = document
                 .metadata
                 .source_path
                 .strip_prefix(&rendered.site.source_path)?;
-            xrefs.insert(rel_path.to_owned(), name.clone());
+            xrefs.insert(rel_path.to_owned(), document.data.name.clone());
         }
 
         let full_documents = rendered
             .documents
             .iter()
-            .map(|(k, v)| {
-                let local_sitemap = sitemap.local(&k).ok_or(Error::DocumentNotFound)?;
+            .map(|(_, v)| {
+                let local_sitemap = sitemap.local(&v.data.name).ok_or(Error::DocumentNotFound)?;
 
                 let mut content = layout::document(&v, &sitemap, &local_sitemap, handlebars)?;
                 let variables = variable::search(&content)?;
@@ -149,18 +149,15 @@ impl FullSite {
                     }
                 }
 
-                Ok((
-                    k.clone(),
-                    FullDocument {
-                        site_metadata: v.site_metadata.clone(),
-                        metadata: v.metadata.clone(),
-                        rendered: v.data.clone(),
-                        content,
-                        local_sitemap,
-                    },
-                ))
+                Ok(FullDocument {
+                    site_metadata: v.site_metadata.clone(),
+                    metadata: v.metadata.clone(),
+                    rendered: v.data.clone(),
+                    content,
+                    local_sitemap,
+                })
             })
-            .collect::<Result<HashMap<DocumentName, FullDocument>, Error>>()?;
+            .collect::<Result<Vec<FullDocument>, Error>>()?;
 
         Ok(Self {
             site: rendered.site.clone(),

@@ -126,7 +126,7 @@ pub fn layout(
         page_url: format!(
             "{}{}",
             rendered.site_metadata.config.url,
-            rendered.metadata.name.folder_path().display()
+            rendered.data.name.folder_path().display()
         ),
 
         has_site_links: false,

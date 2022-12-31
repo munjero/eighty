@@ -18,7 +18,7 @@
 
 use super::{MetadatadSite, MetadatadWorkspace};
 use crate::{
-    document::{DocumentName, RenderedDocument},
+    document::RenderedDocument,
     file::FileMetadata,
     site::{SiteMetadata, SiteName},
     Error,
@@ -72,7 +72,7 @@ impl RenderedWorkspace {
 #[derive(Eq, Clone, PartialEq, Debug)]
 pub struct RenderedSite {
     pub site: Arc<SiteMetadata>,
-    pub documents: HashMap<DocumentName, RenderedDocument>,
+    pub documents: HashMap<PathBuf, RenderedDocument>,
     pub files: Arc<HashMap<PathBuf, FileMetadata>>,
 }
 
@@ -81,9 +81,9 @@ impl RenderedSite {
         let documents = metadata
             .documents
             .par_iter()
-            .map(|(name, document)| {
+            .map(|document| {
                 Ok((
-                    name.clone(),
+                    document.rel_source_path.clone(),
                     RenderedDocument::new(metadata.site.clone(), document.clone())?,
                 ))
             })
@@ -103,17 +103,17 @@ impl RenderedSite {
         let documents = metadata
             .documents
             .par_iter()
-            .map(|(name, document)| {
-                if let Some(old_document) = old.documents.get(&name) {
+            .map(|document| {
+                if let Some(old_document) = old.documents.get(&document.rel_source_path) {
                     if old_document.site_metadata == metadata.site
                         && old_document.metadata == *document
                     {
-                        return Ok((name.clone(), old_document.clone()));
+                        return Ok((document.rel_source_path.clone(), old_document.clone()));
                     }
                 }
 
                 Ok((
-                    name.clone(),
+                    document.rel_source_path.clone(),
                     RenderedDocument::new(metadata.site.clone(), document.clone())?,
                 ))
             })
