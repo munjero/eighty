@@ -30,5 +30,16 @@
       '';
       runtimeInputs = [ asciidocProcessor pandocProcessor ];
     };
+
+    apps."${system}".build = let
+      scriptPkg = pkgs.writeScriptBin "build-to-dist" ''
+        #!${pkgs.stdenv.shell}
+
+        ${self.packages."${system}".eighty}/bin/eighty build sites dist
+      '';
+    in {
+      type = "app";
+      program = "${scriptPkg}/bin/build-to-dist";
+    };
   };
 }
