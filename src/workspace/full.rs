@@ -102,7 +102,7 @@ impl FullSite {
             .iter()
             .map(|(_, v)| BreadcrumbItem {
                 document_name: v.data.name.clone(),
-                title: v.data.title.clone(),
+                title: v.data.sitemap_title.clone().unwrap_or(v.data.title.clone()),
                 description: v.data.description.clone(),
             })
             .collect::<Vec<_>>();
