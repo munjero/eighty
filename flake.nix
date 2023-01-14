@@ -5,7 +5,6 @@
     pkgs = import nixpkgs { inherit system; };
     asciidocProcessor = import ./processors/asciidoc { inherit pkgs; };
     pandocProcessor = import ./processors/pandoc { inherit pkgs; };
-    # eighty =
 
   in {
     devShell."${system}" = pkgs.mkShell {

@@ -64,7 +64,7 @@ struct DocumentContextSiteLink {
 #[serde(rename_all = "camelCase")]
 struct DocumentContextSitemapItem {
     pub title: String,
-    pub path: String,
+    pub url: String,
     pub children: Vec<DocumentContextSitemapItem>,
 }
 
@@ -84,12 +84,12 @@ struct DocumentContextBreadcrumbItem {
 }
 
 impl DocumentContextSitemapItem {
-    pub fn from_sitemap_item(item: SitemapItem, max_depth: Option<usize>) -> Self {
+    pub fn from_sitemap_item(item: SitemapItem, max_depth: Option<usize>, site_base_url: &str) -> Self {
         let show_children = max_depth.map(|d| d > 0).unwrap_or(true);
 
         Self {
             title: item.item.title,
-            path: format!("{}", item.item.document_name.folder_path().display()),
+            url: format!("{}{}/", site_base_url, item.item.document_name.folder_path().display()),
             children: if show_children {
                 item.children
                     .iter()
@@ -97,6 +97,7 @@ impl DocumentContextSitemapItem {
                         Self::from_sitemap_item(
                             child.clone(),
                             max_depth.map(|d| d.saturating_sub(1)),
+                            site_base_url,
                         )
                     })
                     .collect()
@@ -142,9 +143,9 @@ pub fn layout(
         toc: rendered.data.toc.clone(),
         page_content: rendered.data.content.clone(),
 
-        page_author_url: "https://social.that.world/@wei".to_string(),
+        page_author_url: "https://social.pacna.org/@wei".to_string(),
         page_author: "Wei Tang".to_string(),
-        page_copyright_years: "2019-2021".to_string(),
+        page_copyright_years: "2019-2023".to_string(),
 
         page_license: rendered.data.license.clone(),
         page_license_code: rendered.data.license_code.clone(),
@@ -157,8 +158,16 @@ pub fn layout(
                         DocumentContextSitemapItem::from_sitemap_item(
                             child.clone(),
                             site_config.sitemap.depth.map(|d| d.saturating_sub(1)),
+                            &site_config.base_url,
                         )
                     })
+                    .chain(site_config.sitemap.extra_links.iter().map(|link| {
+                        DocumentContextSitemapItem {
+                            title: link.title.clone(),
+                            url: link.url.clone(),
+                            children: Vec::new(),
+                        }
+                    }))
                     .collect(),
             )
         } else {

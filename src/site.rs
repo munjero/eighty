@@ -76,6 +76,15 @@ pub struct SiteConfigLink {
 pub struct SiteConfigSitemap {
     pub enable: bool,
     pub depth: Option<usize>,
+    #[serde(default)]
+    pub extra_links: Vec<SiteConfigSitemapExtraLink>,
+}
+
+#[derive(Eq, Clone, PartialEq, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SiteConfigSitemapExtraLink {
+    pub title: String,
+    pub url: String,
 }
 
 #[derive(Eq, Clone, PartialEq, Debug)]
